@@ -85,7 +85,7 @@ export default async function CommunityPage() {
           <p className="text-gray-500 mb-5">A sneak peek at what's inside:</p>
           <div className="flex flex-col gap-3">
             {[
-              { author: 'Sarah M.', text: 'Anyone else's 2yo just refusing naps completely? We tried everything and finally...', channel: '#toddlers-1-3' },
+              { author: 'Sarah M.', text: "Anyone else's 2yo just refusing naps completely? We tried everything and finally...", channel: '#toddlers-1-3' },
               { author: 'Mike & Jen', text: 'Best free splash pad in Irvine is 100% the one at Woodbury. Open until September.', channel: '#weekend-events' },
               { author: 'Priya K.', text: 'Just had our 6-month checkup, sharing the milestone checklist my pediatrician gave us...', channel: '#newborns-0-12m' },
             ].map((post, i) => (

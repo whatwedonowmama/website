@@ -10,12 +10,12 @@ export async function createClient() {
     {
       cookies: {
         getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, {
                 ...options,
-                maxAge: 60 * 60 * 24 * 30, // 30-day session — frictionless return login
+                maxAge: 60 * 60 * 24 * 30,
               })
             )
           } catch {
