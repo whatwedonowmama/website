@@ -10,6 +10,7 @@ function SignupForm() {
   const [password, setPassword]   = useState('')
   const [error, setError]         = useState('')
   const [loading, setLoading]     = useState(false)
+  const [needsConfirm, setNeedsConfirm] = useState(false)
   const router       = useRouter()
   const searchParams = useSearchParams()
   const plan         = searchParams.get('plan')
@@ -26,7 +27,7 @@ function SignupForm() {
     setLoading(true)
     const supabase = createClient()
 
-    const { error: authError } = await supabase.auth.signUp({
+    const { data, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { first_name: firstName } },
@@ -40,6 +41,14 @@ function SignupForm() {
       return
     }
 
+    // If no session, Supabase sent a confirmation email — show check-your-email screen
+    if (!data.session) {
+      setNeedsConfirm(true)
+      setLoading(false)
+      return
+    }
+
+    // Session exists — user is immediately signed in (email confirmation disabled)
     if (plan === 'plus') {
       const res = await fetch('/api/checkout', {
         method: 'POST',
@@ -53,6 +62,19 @@ function SignupForm() {
 
     router.push('/dashboard?welcome=1')
     router.refresh()
+  }
+
+  if (needsConfirm) {
+    return (
+      <div className="card flex flex-col items-center gap-4 text-center py-8">
+        <p className="text-4xl">📬</p>
+        <h2 className="font-display text-xl font-bold text-brand-navy">Check your email</h2>
+        <p className="text-sm text-gray-600">
+          We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account and get into your dashboard.
+        </p>
+        <p className="text-xs text-gray-400">Check your spam folder if you don&apos;t see it within a minute.</p>
+      </div>
+    )
   }
 
   return (
