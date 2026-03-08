@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --purple:    #5B3FA6;
+  --coral:     #E8735A;
+  --gold:      #F7D06E;
+  --navy:      #1A1A2E;
+  --lavender:  #EDE7F6;
+  --cream:     #FFF9F5;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: var(--cream);
+  color: var(--navy);
+}
+
+h1, h2, h3 {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl
+           bg-brand-purple text-white font-semibold text-base
+           min-h-[44px] min-w-[44px]
+           hover:bg-brand-midpurple transition-colors;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl
+           border-2 border-brand-purple text-brand-purple font-semibold text-base
+           min-h-[44px] min-w-[44px]
+           hover:bg-brand-lavender transition-colors;
+  }
+  .btn-coral {
+    @apply inline-flex items-center justify-center px-6 py-3 rounded-xl
+           bg-brand-coral text-white font-semibold text-base
+           min-h-[44px] min-w-[44px]
+           hover:opacity-90 transition-opacity;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-5;
+  }
+  .section-label {
+    @apply text-xs font-semibold uppercase tracking-widest text-brand-midpurple;
+  }
+  .badge-free {
+    @apply inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700;
+  }
+  .badge-plus {
+    @apply inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-lavender text-brand-purple;
+  }
+  .badge-paid {
+    @apply inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-gold text-brand-navy;
+  }
+}
