@@ -5,7 +5,6 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { SEED_RESOURCES, getSeedResource, type SeedResource } from '@/lib/seed-resources'
 import type { Resource } from '@/lib/types'
-import ShareButtons from '@/components/ShareButtons'
 
 type Props = { params: Promise<{ slug: string }> }
 
@@ -16,7 +15,6 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
 
-  // Try Supabase first
   const supabase = await createClient()
   const { data } = await supabase
     .from('resources')
@@ -31,7 +29,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     }
   }
 
-  // Fall back to seed
   const seed = getSeedResource(slug)
   if (seed) {
     return {
@@ -58,7 +55,6 @@ export default async function ResourcePage({ params }: Props) {
   const user = await getUser()
   const isPlus = user?.tier === 'plus'
 
-  // Try Supabase
   const { data: dbResource } = await supabase
     .from('resources')
     .select('*')
@@ -66,7 +62,6 @@ export default async function ResourcePage({ params }: Props) {
     .eq('status', 'published')
     .single()
 
-  // Fall back to seed data
   const resource: Resource | SeedResource | null = dbResource ?? getSeedResource(slug) ?? null
 
   if (!resource) notFound()
@@ -76,15 +71,13 @@ export default async function ResourcePage({ params }: Props) {
   const author = ('author' in resource ? resource.author : null) ?? 'whatwedonowmama team'
   const emoji = CATEGORY_EMOJI[resource.category] ?? '📖'
   const categoryLabel = resource.category.replace('-', ' ')
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://whatwedonowmama.com'
-  const articleUrl = `${siteUrl}/resources/${slug}`
 
   return (
     <div className="bg-brand-cream min-h-screen">
 
       {/* ── ARTICLE HEADER ── */}
       <section className="bg-white border-b border-gray-100 px-4 py-10">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-3xl mx-auto">
 
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-sm text-gray-400 mb-6">
@@ -109,16 +102,16 @@ export default async function ResourcePage({ params }: Props) {
             {resource.title}
           </h1>
 
-          {/* Description */}
+          {/* Description — wider and more breathing room */}
           {resource.excerpt && (
-            <p className="text-gray-600 text-lg leading-relaxed mb-5">
+            <p className="text-gray-600 text-lg leading-relaxed mb-6 max-w-2xl">
               {resource.excerpt}
             </p>
           )}
 
           {/* Tags */}
           {tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-5">
+            <div className="flex flex-wrap gap-2 mb-6">
               {tags.map(tag => (
                 <span
                   key={tag}
@@ -130,18 +123,15 @@ export default async function ResourcePage({ params }: Props) {
             </div>
           )}
 
-          {/* Author + read time + share */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-4 border-t border-gray-100">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-brand-purple flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                W
-              </div>
-              <div>
-                <p className="text-sm font-medium text-brand-navy">{author}</p>
-                <p className="text-xs text-gray-400">{resource.read_time_minutes} min read</p>
-              </div>
+          {/* Author + read time */}
+          <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
+            <div className="w-8 h-8 rounded-full bg-brand-purple flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+              W
             </div>
-            <ShareButtons url={articleUrl} title={resource.title} />
+            <div>
+              <p className="text-sm font-medium text-brand-navy">{author}</p>
+              <p className="text-xs text-gray-400">{resource.read_time_minutes} min read</p>
+            </div>
           </div>
 
         </div>
@@ -149,7 +139,7 @@ export default async function ResourcePage({ params }: Props) {
 
       {/* ── ARTICLE BODY ── */}
       <section className="px-4 py-10">
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-3xl mx-auto">
           {!isLocked ? (
             <div
               className="prose prose-lg max-w-none
@@ -177,27 +167,16 @@ export default async function ResourcePage({ params }: Props) {
         </div>
       </section>
 
-      {/* ── BOTTOM SECTION: share + email subscribe ── */}
+      {/* ── BOTTOM: email subscribe ── */}
       {!isLocked && (
         <section className="px-4 pb-16">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-3xl mx-auto">
 
-            {/* Divider with sparkles */}
+            {/* Sparkle divider */}
             <div className="flex items-center gap-4 mb-10">
               <div className="flex-1 h-px bg-gray-200" />
               <span className="text-brand-gold text-lg select-none">✦ ✦ ✦</span>
               <div className="flex-1 h-px bg-gray-200" />
-            </div>
-
-            {/* Share prompt */}
-            <div className="text-center mb-10">
-              <p className="font-display text-xl font-bold text-brand-navy mb-1">
-                Was this helpful?
-              </p>
-              <p className="text-sm text-gray-500 mb-4">
-                Share it with another parent who might need it.
-              </p>
-              <ShareButtons url={articleUrl} title={resource.title} large />
             </div>
 
             {/* Email subscribe box */}
@@ -207,7 +186,7 @@ export default async function ResourcePage({ params }: Props) {
                 Get new guides straight to your inbox
               </h2>
               <p className="text-gray-400 text-sm max-w-xs">
-                We publish honest parenting guides for OC families every month. Join free — no spam, ever.
+                We publish honest parenting guides for OC families every month. No spam, ever.
               </p>
               <form
                 action="/api/subscribe"

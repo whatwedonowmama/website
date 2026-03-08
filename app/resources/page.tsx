@@ -75,10 +75,19 @@ export default async function ResourcesPage({
             {!user && (
               <div className="bg-brand-lavender/40 rounded-2xl p-4 flex flex-col gap-2 max-w-xs">
                 <p className="text-sm font-semibold text-brand-navy">Get new guides by email ✦</p>
-                <p className="text-xs text-gray-500">Free articles in your inbox every month.</p>
-                <Link href="/signup" className="btn-primary text-sm px-4 py-2 text-center">
-                  Sign up free →
-                </Link>
+                <p className="text-xs text-gray-500">Fresh articles in your inbox every month. Free.</p>
+                <form action="/api/subscribe" method="POST" className="flex flex-col gap-2 mt-1">
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    placeholder="you@email.com"
+                    className="w-full rounded-xl px-3 py-2.5 text-sm bg-white border border-brand-purple/20 text-brand-navy placeholder-gray-400 focus:outline-none focus:border-brand-purple"
+                  />
+                  <button type="submit" className="btn-primary text-sm px-4 py-2.5 w-full justify-center">
+                    Subscribe free →
+                  </button>
+                </form>
               </div>
             )}
           </div>

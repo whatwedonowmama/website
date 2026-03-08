@@ -149,7 +149,7 @@ export default async function HomePage() {
               <span className="italic text-brand-purple">OC parents</span>
             </h2>
             <p className="text-gray-500 mt-2 text-sm max-w-sm">
-              Real advice. No filler. Every guide is free — just grab an account to save your favorites.
+              Real advice. No filler. Every guide is free — no account needed.
             </p>
           </div>
           <Link href="/resources" className="text-sm font-semibold text-brand-purple hover:underline whitespace-nowrap">
@@ -162,16 +162,25 @@ export default async function HomePage() {
             {resources.map(r => <ResourceCard key={r.id} resource={r} />)}
           </div>
         ) : (
-          /* Empty state — soft signup prompt */
+          /* Empty state — email capture */
           <div className="bg-brand-lavender/30 rounded-3xl p-10 text-center flex flex-col items-center gap-4">
             <span className="text-4xl">📖</span>
             <h3 className="font-display text-xl font-bold text-brand-navy">Guides dropping soon</h3>
             <p className="text-gray-500 text-sm max-w-sm">
-              We&apos;re finishing our first round of OC parent guides. Sign up free and we&apos;ll send them straight to your inbox.
+              We&apos;re finishing our first round of OC parent guides. Drop your email and we&apos;ll send them straight to you.
             </p>
-            <Link href="/signup" className="btn-primary mt-1">
-              Get notified free →
-            </Link>
+            <form action="/api/subscribe" method="POST" className="w-full max-w-xs flex flex-col sm:flex-row gap-2 mt-1">
+              <input
+                type="email"
+                name="email"
+                required
+                placeholder="you@email.com"
+                className="flex-1 rounded-2xl px-4 py-3 text-sm bg-white border border-gray-200 text-brand-navy placeholder-gray-400 focus:outline-none focus:border-brand-purple"
+              />
+              <button type="submit" className="btn-primary px-5 py-3 whitespace-nowrap">
+                Notify me
+              </button>
+            </form>
           </div>
         )}
       </section>
@@ -259,16 +268,20 @@ export default async function HomePage() {
             <p className="text-gray-600 text-base leading-relaxed max-w-md">
               3,000+ OC parents sharing what actually works — sleep schedules, toddler tantrums, the best parks, and everything in between. Real talk, no judgment.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Link href="/signup" className="btn-primary">
-                Join free →
-              </Link>
-              <Link href="/about" className="btn-secondary">
-                Our story
-              </Link>
-            </div>
+            <form action="/api/subscribe" method="POST" className="flex flex-col sm:flex-row gap-2 w-full max-w-sm">
+              <input
+                type="email"
+                name="email"
+                required
+                placeholder="your@email.com"
+                className="flex-1 rounded-2xl px-4 py-3 text-sm bg-white border border-gray-200 text-brand-navy placeholder-gray-400 focus:outline-none focus:border-brand-purple"
+              />
+              <button type="submit" className="btn-primary px-5 py-3 whitespace-nowrap">
+                Join the newsletter
+              </button>
+            </form>
             <p className="text-xs text-gray-400">
-              Free forever · Discord community available with Plus membership
+              Free weekly events + guides · No spam · <Link href="/about" className="underline hover:text-brand-purple">Our story</Link>
             </p>
           </div>
 
