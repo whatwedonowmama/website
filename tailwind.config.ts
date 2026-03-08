@@ -21,6 +21,7 @@ const config: Config = {
       },
       fontFamily: {
         display: ['Playfair Display', 'Georgia', 'serif'],
+        script:  ['Dancing Script', 'cursive'],
         body:    ['Inter', 'system-ui', 'sans-serif'],
       },
     },
