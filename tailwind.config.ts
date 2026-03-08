@@ -21,11 +21,12 @@ const config: Config = {
       },
       fontFamily: {
         display: ['Playfair Display', 'Georgia', 'serif'],
+        script:  ['Dancing Script', 'cursive'],
         body:    ['Inter', 'system-ui', 'sans-serif'],
       },
     },
   },
-  plugins: [],
+  plugins: [require('@tailwindcss/typography')],
 }
 
 export default config
