@@ -93,6 +93,10 @@ export default async function AdminPage() {
           <p className="font-semibold text-brand-navy">👥 Members</p>
           <p className="text-sm text-gray-500">Search, view tier, manage access</p>
         </Link>
+        <Link href="/admin/sources" className="card hover:shadow-md transition-shadow flex flex-col gap-1">
+          <p className="font-semibold text-brand-navy">🌐 Scrape Sources</p>
+          <p className="text-sm text-gray-500">Add and manage websites the scraper visits</p>
+        </Link>
       </div>
 
       {/* Note */}

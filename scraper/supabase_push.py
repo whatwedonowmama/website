@@ -21,6 +21,7 @@ DEPENDENCIES:
 import json
 import os
 import sys
+import re
 import argparse
 import hashlib
 import logging
@@ -56,48 +57,86 @@ logger = logging.getLogger(__name__)
 # SUPABASE HELPERS
 # ─────────────────────────────────────────────────────────────
 
-def supabase_headers() -> dict:
+def supabase_headers(prefer: str = "return=minimal") -> dict:
     return {
         "apikey":        SUPABASE_KEY,
         "Authorization": f"Bearer {SUPABASE_KEY}",
         "Content-Type":  "application/json",
-        "Prefer":        "return=minimal",
+        "Prefer":        prefer,
     }
 
 
 def fetch_existing_fingerprints() -> set:
     """
-    Fetch fingerprints of items already in pending_content (pending or approved)
-    so we don't re-insert events that were already scraped this week.
+    Fetch fingerprints already in pending_content (any status) AND already-approved
+    events in the events table so we never re-queue something that's already live.
     """
-    url = f"{SUPABASE_URL}/rest/v1/{TABLE}?select=notes&status=in.(pending,approved)"
-    # We store the dedup fingerprint in the `notes` field as `fingerprint:<hash>`
+    fingerprints = set()
+
+    # ── pending_content fingerprints ──────────────────────────
     resp = requests.get(
         f"{SUPABASE_URL}/rest/v1/{TABLE}",
         headers=supabase_headers(),
-        params={
-            "select": "notes",
-            "status": "in.(pending,approved)",
-        },
+        params={"select": "fingerprint", "fingerprint": "not.is.null"},
         timeout=15,
     )
-    if not resp.ok:
-        logger.warning(f"Could not fetch existing items: {resp.status_code} — will push all")
-        return set()
+    if resp.ok:
+        for row in resp.json():
+            fp = row.get("fingerprint")
+            if fp:
+                fingerprints.add(fp)
+        logger.info(f"Loaded {len(fingerprints)} fingerprints from pending_content")
+    else:
+        logger.warning(f"Could not load pending_content fingerprints: {resp.status_code}")
 
-    rows = resp.json()
-    fingerprints = set()
-    for row in rows:
-        notes = row.get("notes") or ""
-        if notes.startswith("fingerprint:"):
-            fingerprints.add(notes.split(":", 1)[1])
+    # ── events table: already-approved events ─────────────────
+    # We fingerprint approved events the same way so we never re-add them.
+    try:
+        events_resp = requests.get(
+            f"{SUPABASE_URL}/rest/v1/events",
+            headers=supabase_headers(),
+            params={"select": "title,event_date,city"},
+            timeout=15,
+        )
+        if events_resp.ok:
+            live_events = events_resp.json()
+            for ev in live_events:
+                fp = _normalize_fingerprint(
+                    ev.get("title", ""),
+                    ev.get("event_date", ""),
+                    ev.get("city", ""),
+                )
+                fingerprints.add(fp)
+            logger.info(f"Loaded {len(live_events)} fingerprints from live events table")
+    except Exception as e:
+        logger.warning(f"Could not check live events table: {e}")
+
     return fingerprints
 
 
-def event_fingerprint(event: dict) -> str:
-    """Stable dedup hash: title + date + city."""
-    key = f"{event.get('title','').lower().strip()}-{event.get('date','')}-{event.get('city','').lower().strip()}"
+def _normalize_fingerprint(title: str, date: str, city: str) -> str:
+    """
+    Normalize and hash event fields for deduplication.
+    Strips punctuation, collapses whitespace, and lowercases before hashing
+    so minor differences in formatting don't create false duplicates.
+    """
+    def clean(s: str) -> str:
+        s = s.lower().strip()
+        s = re.sub(r"[^\w\s]", "", s)   # strip punctuation
+        s = re.sub(r"\s+", " ", s)       # collapse whitespace
+        return s
+
+    key = f"{clean(title)}-{date}-{clean(city)}"
     return hashlib.md5(key.encode()).hexdigest()
+
+
+def event_fingerprint(event: dict) -> str:
+    """Public interface — compute dedup fingerprint for a scraped event dict."""
+    return _normalize_fingerprint(
+        event.get("title", ""),
+        event.get("date", ""),
+        event.get("city", ""),
+    )
 
 
 def map_event_to_row(event: dict) -> dict:
@@ -116,26 +155,28 @@ def map_event_to_row(event: dict) -> dict:
         "city":          event.get("city"),
         "price":         event.get("price"),
         "is_free":       bool(event.get("is_free")) if event.get("is_free") is not None else False,
-        "category":      None,   # Events don't have resource categories
+        "category":      None,
         "tags":          event.get("categories") or [],
         "scraped_at":    event.get("scraped_at") or datetime.utcnow().isoformat() + "Z",
-        "notes":         f"fingerprint:{fp}",  # used for deduplication
+        "fingerprint":   fp,
+        "notes":         f"fingerprint:{fp}",  # keep for backward compat
     }
 
 
 def batch_insert(rows: list[dict], dry_run: bool = False) -> tuple[int, int]:
     """
-    Insert rows into pending_content in batches of 50.
-    Returns (inserted_count, skipped_count).
+    Insert rows into pending_content, ignoring rows whose fingerprint already exists.
+    Uses PostgREST ON CONFLICT / ignore-duplicates so DB-level dedup catches anything
+    the Python pre-check misses.
+    Returns (inserted_count, skipped_or_failed_count).
     """
     if not rows:
         return 0, 0
 
     inserted = 0
     failed   = 0
-
-    # Insert in batches of 50
     batch_size = 50
+
     for i in range(0, len(rows), batch_size):
         batch = rows[i:i + batch_size]
 
@@ -145,16 +186,17 @@ def batch_insert(rows: list[dict], dry_run: bool = False) -> tuple[int, int]:
             inserted += len(batch)
             continue
 
+        # Use upsert with ignore-duplicates so DB rejects conflicting fingerprints
         resp = requests.post(
-            f"{SUPABASE_URL}/rest/v1/{TABLE}",
-            headers=supabase_headers(),
+            f"{SUPABASE_URL}/rest/v1/{TABLE}?on_conflict=fingerprint",
+            headers=supabase_headers("resolution=ignore-duplicates,return=minimal"),
             json=batch,
             timeout=20,
         )
 
         if resp.ok:
             inserted += len(batch)
-            logger.info(f"  ✓ Inserted batch of {len(batch)} events")
+            logger.info(f"  ✓ Processed batch of {len(batch)} events (duplicates ignored at DB level)")
         else:
             failed += len(batch)
             logger.error(f"  ✗ Batch insert failed: {resp.status_code} — {resp.text[:200]}")
@@ -179,17 +221,14 @@ def main():
     if not args.dry_run:
         if not SUPABASE_URL:
             print("\nERROR: SUPABASE_URL environment variable not set.")
-            print("Add it to your .env file or GitHub Actions secrets.\n")
             sys.exit(1)
         if not SUPABASE_KEY:
             print("\nERROR: SUPABASE_SERVICE_KEY environment variable not set.")
-            print("Use the service_role key from Supabase → Settings → API.\n")
             sys.exit(1)
 
     # ── Load events ───────────────────────────────────────────
     if not os.path.exists(events_file):
-        print(f"\nERROR: {events_file} not found.")
-        print("Run events_scraper.py first.\n")
+        print(f"\nERROR: {events_file} not found. Run events_scraper.py first.\n")
         sys.exit(1)
 
     with open(events_file, "r", encoding="utf-8") as f:
@@ -201,18 +240,31 @@ def main():
     real_events = [e for e in events if not e.get("is_mock")]
     mock_count  = len(events) - len(real_events)
     if mock_count:
-        logger.info(f"Skipping {mock_count} mock/fallback events — only real scraped events will be pushed")
+        logger.info(f"Skipping {mock_count} mock/fallback events")
 
     # ── Deduplication ─────────────────────────────────────────
+    # Step 1: dedup within this batch (same event from multiple sources)
+    seen_in_batch = set()
+    unique_in_batch = []
+    for e in real_events:
+        fp = event_fingerprint(e)
+        if fp not in seen_in_batch:
+            seen_in_batch.add(fp)
+            unique_in_batch.append(e)
+    batch_dupes = len(real_events) - len(unique_in_batch)
+    if batch_dupes:
+        logger.info(f"Dedup: removed {batch_dupes} duplicates within this batch")
+
+    # Step 2: check against Supabase (pending + live events)
     if not args.all and not args.dry_run:
         existing = fetch_existing_fingerprints()
         logger.info(f"Found {len(existing)} existing fingerprints in Supabase")
-        new_events = [e for e in real_events if event_fingerprint(e) not in existing]
-        skipped_dedup = len(real_events) - len(new_events)
+        new_events = [e for e in unique_in_batch if event_fingerprint(e) not in existing]
+        skipped_dedup = len(unique_in_batch) - len(new_events)
         if skipped_dedup:
             logger.info(f"Dedup: skipping {skipped_dedup} already-seen events")
     else:
-        new_events = real_events
+        new_events = unique_in_batch
 
     if not new_events:
         logger.info("No new events to push. All already in Supabase. ✓")
@@ -232,6 +284,7 @@ def main():
     print(f"  Source file:    {events_file}")
     print(f"  Total events:   {len(events)}")
     print(f"  Mock (skipped): {mock_count}")
+    print(f"  Batch dupes:    {batch_dupes}")
     print(f"  New to push:    {len(new_events)}")
     if args.dry_run:
         print(f"  [DRY RUN] Would insert: {inserted}")

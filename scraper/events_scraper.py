@@ -94,6 +94,53 @@ def load_config() -> dict:
     return config
 
 
+def load_db_sources() -> list:
+    """
+    Load additional scrape sources from the Supabase scrape_sources table.
+    These are URLs added through the admin UI at /admin/sources.
+    Returns an empty list if env vars aren't set or the table is unreachable.
+    """
+    url = os.getenv("SUPABASE_URL", "").rstrip("/")
+    key = os.getenv("SUPABASE_SERVICE_KEY", "")
+    if not url or not key:
+        return []
+
+    try:
+        resp = requests.get(
+            f"{url}/rest/v1/scrape_sources",
+            headers={
+                "apikey":        key,
+                "Authorization": f"Bearer {key}",
+            },
+            params={"select": "*", "enabled": "eq.true"},
+            timeout=10,
+        )
+        if not resp.ok:
+            logger.warning(f"Could not load DB sources: {resp.status_code}")
+            return []
+
+        rows = resp.json()
+        sources = []
+        for row in rows:
+            sources.append({
+                "name":       row.get("name") or row.get("url", "Unknown"),
+                "url":        row.get("url"),
+                "frequency":  row.get("frequency", "weekly"),
+                "enabled":    True,
+                "max_events": 15,
+                "tags":       row.get("tags") or [],
+                "notes":      row.get("notes") or "Added via admin UI",
+                "_from_db":   True,
+            })
+        if sources:
+            logger.info(f"Loaded {len(sources)} additional sources from Supabase DB")
+        return sources
+
+    except Exception as e:
+        logger.warning(f"Error loading DB sources: {e}")
+        return []
+
+
 def load_state() -> dict:
     """Load scraper_state.json (last-run tracker). Returns empty dict if first run."""
     if not os.path.exists(STATE_FILE):
@@ -571,14 +618,24 @@ def main():
         print_site_list(config, state)
         return 0
 
-    all_sources = config.get("sources", [])
+    # Merge yaml sources with any sources added via the admin UI
+    yaml_sources = config.get("sources", [])
+    db_sources   = load_db_sources()
+
+    # Avoid duplicates if a URL was added to both yaml and DB
+    yaml_urls = {s["url"] for s in yaml_sources}
+    new_db_sources = [s for s in db_sources if s["url"] not in yaml_urls]
+    if new_db_sources:
+        logger.info(f"Adding {len(new_db_sources)} sources from DB not in sites.yaml")
+
+    all_sources = yaml_sources + new_db_sources
 
     # --site: filter to just the named site
     if args.site:
         match = [s for s in all_sources if s["name"].lower() == args.site.lower()]
         if not match:
             available = [s["name"] for s in all_sources]
-            print(f"\nERROR: Site '{args.site}' not found in sites.yaml.")
+            print(f"\nERROR: Site '{args.site}' not found in sites.yaml or Supabase sources.")
             print(f"Available sites: {', '.join(available)}\n")
             return 1
         sites_to_run = match

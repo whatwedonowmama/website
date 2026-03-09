@@ -4,7 +4,31 @@ import type { PendingContent } from '@/lib/types'
 
 interface Props {
   item: PendingContent
-  onDone: (id: string) => void
+  onDone:    (id: string) => void
+  onApprove: (text: string) => void  // called with formatted email-copy text when approved
+}
+
+function formatForNotepad(fields: {
+  title: string
+  description: string
+  event_date: string
+  event_time: string
+  location_name: string
+  city: string
+  price: string
+  is_free: boolean
+  source_url: string
+}): string {
+  const lines: string[] = []
+  lines.push(`📅 ${fields.title}`)
+  const dateParts = [fields.event_date, fields.event_time].filter(Boolean)
+  if (dateParts.length) lines.push(`🗓  ${dateParts.join(' at ')}`)
+  const locParts = [fields.location_name, fields.city].filter(Boolean)
+  if (locParts.length) lines.push(`📍 ${locParts.join(', ')}`)
+  lines.push(`💰 ${fields.is_free ? 'Free' : fields.price || 'Paid'}`)
+  if (fields.source_url) lines.push(`🔗 ${fields.source_url}`)
+  if (fields.description) lines.push(`\n${fields.description}`)
+  return lines.join('\n')
 }
 
 const SOURCE_EMOJI: Record<string, string> = {
@@ -13,7 +37,7 @@ const SOURCE_EMOJI: Record<string, string> = {
   'Irvine':     '🏙️',
 }
 
-export default function ReviewCard({ item, onDone }: Props) {
+export default function ReviewCard({ item, onDone, onApprove }: Props) {
   const [editing, setEditing]   = useState(false)
   const [loading, setLoading]   = useState(false)
   const [fields, setFields]     = useState({
@@ -37,6 +61,9 @@ export default function ReviewCard({ item, onDone }: Props) {
       body:    JSON.stringify({ id: item.id, action, updates: fields }),
     })
     setLoading(false)
+    if (action === 'approve') {
+      onApprove(formatForNotepad(fields))
+    }
     onDone(item.id)
   }
 
