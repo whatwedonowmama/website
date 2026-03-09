@@ -5,7 +5,38 @@ import EventListItem from '@/components/EventListItem'
 import { getWeekRange } from '@/lib/utils'
 import type { Resource } from '@/lib/types'
 import { SEED_RESOURCES, type SeedResource } from '@/lib/seed-resources'
-import { SEED_EVENTS } from '@/lib/seed-events'
+import { SEED_EVENTS, type SeedEvent } from '@/lib/seed-events'
+import { createServiceClient } from '@/lib/supabase/server'
+
+const GRADIENTS = [
+  'from-blue-400 to-cyan-400', 'from-green-400 to-emerald-500',
+  'from-violet-400 to-purple-500', 'from-orange-400 to-amber-400',
+]
+
+async function getFeaturedEvents(): Promise<SeedEvent[]> {
+  try {
+    const { data } = await createServiceClient()
+      .from('events')
+      .select('*')
+      .eq('is_pinned', true)
+      .order('event_date', { ascending: true })
+      .limit(4)
+    if (!data || data.length === 0) return SEED_EVENTS.slice(0, 3)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return data.map((ev: Record<string, any>, i: number): SeedEvent => ({
+      id: String(ev.id), slug: String(ev.slug ?? `event-${i}`),
+      title: String(ev.title ?? ''), description: String(ev.description ?? ''),
+      date: String(ev.event_date ?? ''), time: String(ev.event_time ?? ''),
+      location: String(ev.location_name ?? ''), city: String(ev.city ?? 'Orange County'),
+      price: String(ev.price ?? 'Free'), is_free: Boolean(ev.is_free ?? true),
+      url: ev.source_url ? String(ev.source_url) : null,
+      category: 'community', tags: [],
+      placeholderEmoji: '📅', placeholderGradient: GRADIENTS[i % GRADIENTS.length],
+    }))
+  } catch {
+    return SEED_EVENTS.slice(0, 3)
+  }
+}
 
 async function getFeaturedResources(): Promise<Resource[]> {
   const supabase = await createClient()
@@ -20,13 +51,12 @@ async function getFeaturedResources(): Promise<Resource[]> {
 }
 
 export default async function HomePage() {
-  const dbResources = await getFeaturedResources()
-  // Fall back to seed articles if DB is empty
+  const [dbResources, previewEvents] = await Promise.all([
+    getFeaturedResources(),
+    getFeaturedEvents(),
+  ])
   const resources: (Resource | SeedResource)[] =
     dbResources.length > 0 ? dbResources : SEED_RESOURCES.slice(0, 3)
-
-  // Always use seed events on homepage preview (3 events)
-  const previewEvents = SEED_EVENTS.slice(0, 3)
 
   const weekRange = getWeekRange()
 

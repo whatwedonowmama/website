@@ -2,16 +2,60 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { SEED_EVENTS, getSeedEvent } from '@/lib/seed-events'
+import { createServiceClient } from '@/lib/supabase/server'
+
+export const revalidate = 3600
 
 type Props = { params: Promise<{ slug: string }> }
 
+const GRADIENTS = [
+  'from-blue-400 to-cyan-400',
+  'from-green-400 to-emerald-500',
+  'from-violet-400 to-purple-500',
+  'from-orange-400 to-amber-400',
+  'from-pink-400 to-rose-400',
+  'from-teal-400 to-cyan-400',
+]
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function loadDbEvent(slug: string): Promise<Record<string, any> | null> {
+  try {
+    const { data } = await createServiceClient()
+      .from('events').select('*').eq('slug', slug).single()
+    return data ?? null
+  } catch { return null }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function dbToEvent(ev: Record<string, any>, i = 0) {
+  return {
+    id: String(ev.id ?? ''), slug: String(ev.slug ?? ''),
+    title: String(ev.title ?? ''), description: String(ev.description ?? ''),
+    date: String(ev.event_date ?? ''), time: String(ev.event_time ?? ''),
+    location: String(ev.location_name ?? ''), city: String(ev.city ?? 'Orange County'),
+    price: String(ev.price ?? 'Free'), is_free: Boolean(ev.is_free ?? true),
+    url: ev.source_url ? String(ev.source_url) : null,
+    category: 'community' as const, tags: [] as string[],
+    placeholderEmoji: '📅', placeholderGradient: GRADIENTS[i % GRADIENTS.length],
+  }
+}
+
 export async function generateStaticParams() {
-  return SEED_EVENTS.map(e => ({ slug: e.slug }))
+  const seeds = SEED_EVENTS.map(e => ({ slug: e.slug }))
+  try {
+    const { data } = await createServiceClient()
+      .from('events').select('slug').not('slug', 'is', null)
+    const dbSlugs = (data ?? [])
+      .filter((r: { slug: string }) => r.slug)
+      .map((r: { slug: string }) => ({ slug: r.slug }))
+    return [...seeds, ...dbSlugs]
+  } catch { return seeds }
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const event = getSeedEvent(slug)
+  const db = await loadDbEvent(slug)
+  const event = db ? dbToEvent(db) : getSeedEvent(slug)
   if (!event) return {}
   return {
     title: `${event.title} | whatwedonowmama`,
@@ -22,20 +66,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 function formatFullDate(dateStr: string): string {
   try {
     const d = new Date(dateStr + 'T12:00:00')
-    return d.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month:   'long',
-      day:     'numeric',
-      year:    'numeric',
-    })
-  } catch {
-    return dateStr
-  }
+    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+  } catch { return dateStr }
 }
 
 export default async function EventPage({ params }: Props) {
   const { slug } = await params
-  const event = getSeedEvent(slug)
+
+  // Supabase first, seed fallback
+  const db    = await loadDbEvent(slug)
+  const event = db ? dbToEvent(db) : getSeedEvent(slug)
 
   if (!event) notFound()
 
