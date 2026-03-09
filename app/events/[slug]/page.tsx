@@ -40,7 +40,6 @@ export default async function EventPage({ params }: Props) {
   if (!event) notFound()
 
   const fullDate = formatFullDate(event.date)
-  const mapsQuery = encodeURIComponent(`${event.location}, ${event.city}, CA`)
 
   return (
     <div className="bg-brand-cream min-h-screen">
@@ -162,38 +161,9 @@ export default async function EventPage({ params }: Props) {
                   </a>
                 )}
 
-                {/* Google Maps */}
-                <a
-                  href={`https://maps.google.com/?q=${mapsQuery}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-secondary w-full justify-center text-sm"
-                >
-                  📍 Get directions
-                </a>
               </div>
             </div>
 
-            {/* Email subscribe sidebar */}
-            <div className="bg-brand-navy rounded-3xl p-5 flex flex-col gap-3">
-              <p className="font-script text-brand-gold text-xl">every Friday</p>
-              <p className="font-display text-base font-bold text-white leading-snug">
-                Get the week's best OC events in your inbox
-              </p>
-              <form action="/api/subscribe" method="POST" className="flex flex-col gap-2">
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  placeholder="you@email.com"
-                  className="w-full rounded-xl px-3 py-2.5 text-sm bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-brand-gold"
-                />
-                <button type="submit" className="btn-coral px-4 py-2.5 text-sm w-full justify-center">
-                  Subscribe free
-                </button>
-              </form>
-              <p className="text-gray-600 text-xs">No spam. Unsubscribe any time.</p>
-            </div>
 
           </div>
         </div>

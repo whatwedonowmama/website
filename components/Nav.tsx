@@ -28,14 +28,10 @@ export default function Nav() {
           <Link href="/events" className="hover:text-brand-purple transition-colors">This Week in OC</Link>
           <Link href="/resources" className="hover:text-brand-purple transition-colors">Resources</Link>
           <Link href="/about" className="hover:text-brand-purple transition-colors">Our Story</Link>
-          <Link href="/dashboard" className="hover:text-brand-purple transition-colors">Dashboard</Link>
         </nav>
 
-        {/* CTA */}
-        <div className="hidden md:flex items-center gap-3">
-          <Link href="/login" className="text-sm font-medium text-brand-navy hover:text-brand-purple">Log in</Link>
-          <Link href="/signup" className="btn-primary text-sm px-4 py-2">Join Free</Link>
-        </div>
+        {/* placeholder to keep layout balanced on mobile */}
+        <div className="hidden md:block" />
 
         {/* Mobile menu button */}
         <button
@@ -53,10 +49,6 @@ export default function Nav() {
           <Link href="/events" className="text-base font-medium py-2" onClick={() => setOpen(false)}>This Week in OC</Link>
           <Link href="/resources" className="text-base font-medium py-2" onClick={() => setOpen(false)}>Resources</Link>
           <Link href="/about" className="text-base font-medium py-2" onClick={() => setOpen(false)}>Our Story</Link>
-          <Link href="/dashboard" className="text-base font-medium py-2" onClick={() => setOpen(false)}>Dashboard</Link>
-          <hr className="border-gray-100" />
-          <Link href="/login" className="text-base font-medium py-2" onClick={() => setOpen(false)}>Log in</Link>
-          <Link href="/signup" className="btn-primary text-center" onClick={() => setOpen(false)}>Join Free</Link>
         </div>
       )}
     </header>

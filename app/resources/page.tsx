@@ -69,7 +69,7 @@ export default async function ResourcesPage({
                 <span className="italic text-brand-purple">honestly written.</span>
               </h1>
               <p className="text-gray-500 mt-3 max-w-sm">
-                No fluff. No sponsored content. Real advice for OC families — sleep, feeding, milestones, and more.
+                Curated guides, expert insights, and real-world tips — vetted by families who've been through it.
               </p>
             </div>
             {!user && (
