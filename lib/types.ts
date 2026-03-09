@@ -51,6 +51,31 @@ export interface Event {
   created_at: string
 }
 
+export type PendingStatus = 'pending' | 'approved' | 'rejected'
+export type ContentType  = 'event' | 'resource'
+
+export interface PendingContent {
+  id:            string
+  content_type:  ContentType
+  status:        PendingStatus
+  title:         string
+  description:   string | null
+  source_url:    string | null
+  source_name:   string | null
+  event_date:    string | null
+  event_time:    string | null
+  location_name: string | null
+  city:          string | null
+  price:         string | null
+  is_free:       boolean
+  category:      string | null
+  tags:          string[] | null
+  scraped_at:    string
+  reviewed_at:   string | null
+  notes:         string | null
+  created_at:    string
+}
+
 // Scraped event from oc_events_latest.json
 export interface ScrapedEvent {
   title: string

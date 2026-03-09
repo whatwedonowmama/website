@@ -68,6 +68,11 @@ h1, h2, h3 {
   .badge-paid {
     @apply inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-gold text-brand-navy;
   }
+  /* Form input base style */
+  .input-field {
+    @apply w-full rounded-xl border border-gray-200 px-3 py-2 text-brand-navy
+           bg-white focus:outline-none focus:border-brand-purple transition-colors;
+  }
   /* Decorative sparkle / star */
   .sparkle {
     @apply inline-block text-brand-gold;
