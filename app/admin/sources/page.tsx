@@ -2,6 +2,28 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
+// These are hardcoded in scraper/sites.yaml and always active
+const BUILTIN_SOURCES = [
+  {
+    name:      'Eventbrite OC',
+    url:       'https://www.eventbrite.com/d/ca--orange-county/family-events/',
+    frequency: 'weekly' as const,
+    notes:     'Main Eventbrite OC family events page. Updates constantly.',
+  },
+  {
+    name:      'Meetup OC Families',
+    url:       'https://www.meetup.com/find/?keywords=family+kids&location=Orange+County%2C+CA&source=EVENTS',
+    frequency: 'weekly' as const,
+    notes:     'OC family meetup groups.',
+  },
+  {
+    name:      'OC Parks & Recreation',
+    url:       'https://ocparks.com/parks-trails/special-events',
+    frequency: 'monthly' as const,
+    notes:     'OC Parks seasonal & special events.',
+  },
+]
+
 interface Source {
   id: string
   name: string
@@ -173,6 +195,45 @@ export default function SourcesPage() {
         </form>
       )}
 
+      {/* Built-in sources (from sites.yaml — always active) */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Built-in sources</h2>
+          <span className="text-xs bg-brand-lavender text-brand-purple px-2 py-0.5 rounded-full font-medium">Always active</span>
+        </div>
+        <div className="flex flex-col gap-2">
+          {BUILTIN_SOURCES.map(src => (
+            <div key={src.url} className="bg-white rounded-2xl border border-gray-100 p-4 flex items-start justify-between gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold text-brand-navy text-sm">{src.name}</span>
+                  <span className="text-xs bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded-full font-medium">
+                    ● Active
+                  </span>
+                  <span className="text-xs bg-brand-lavender text-brand-purple px-2 py-0.5 rounded-full capitalize">
+                    {src.frequency === 'weekly' ? 'Weekly' : 'Monthly'}
+                  </span>
+                </div>
+                <a href={src.url} target="_blank" rel="noopener noreferrer"
+                  className="text-xs text-gray-400 hover:text-brand-purple hover:underline truncate block mt-0.5">
+                  {src.url}
+                </a>
+                <p className="text-xs text-gray-400 mt-1">{src.notes}</p>
+              </div>
+              <span className="text-xs text-gray-300 shrink-0 mt-1">Built-in</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Custom sources (added via UI) */}
+      <div className="flex items-center gap-2 mb-3">
+        <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Custom sources</h2>
+        {!loading && sources.length > 0 && (
+          <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{sources.length}</span>
+        )}
+      </div>
+
       {/* Sources list */}
       {loading ? (
         <div className="flex flex-col gap-3">
@@ -181,11 +242,10 @@ export default function SourcesPage() {
           ))}
         </div>
       ) : sources.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
-          <p className="text-4xl mb-3">🔍</p>
-          <p className="font-medium">No custom sources yet</p>
-          <p className="text-sm mt-1">The default sources from sites.yaml are always active.</p>
-          <p className="text-sm">Add a URL above to scrape additional websites.</p>
+        <div className="text-center py-12 text-gray-400 bg-white rounded-2xl border border-dashed border-gray-200">
+          <p className="text-3xl mb-3">➕</p>
+          <p className="font-medium text-sm">No custom sources yet</p>
+          <p className="text-xs mt-1">Hit <strong>+ Add URL</strong> above to add any website you want scraped.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-3">
@@ -248,11 +308,10 @@ export default function SourcesPage() {
         </div>
       )}
 
-      {/* Note about sites.yaml */}
-      <div className="mt-8 bg-brand-lavender/40 rounded-xl p-4 text-xs text-brand-navy/70 leading-relaxed">
-        <strong>Note:</strong> The 3 default sources (Eventbrite OC, Meetup OC, OC Parks) are configured
-        in <code>scraper/sites.yaml</code> and always run — they don't appear in this list.
-        Sources added here are merged in automatically on the next scrape run.
+      {/* Note */}
+      <div className="mt-6 bg-brand-lavender/40 rounded-xl p-4 text-xs text-brand-navy/70 leading-relaxed">
+        Custom sources are merged with the built-in ones at scrape time.
+        The scraper runs every <strong>Monday at 6am PT</strong> via GitHub Actions.
       </div>
     </div>
   )

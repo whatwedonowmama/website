@@ -1,10 +1,8 @@
 import EventListItem from '@/components/EventListItem'
 import { getWeekRange } from '@/lib/utils'
 import { SEED_EVENTS, type SeedEvent, type EventCategory } from '@/lib/seed-events'
-import { readFileSync, existsSync } from 'fs'
-import path from 'path'
+import { createServiceClient } from '@/lib/supabase/server'
 import type { Metadata } from 'next'
-import type { ScrapedEvent } from '@/lib/types'
 
 export const metadata: Metadata = {
   title: 'This Week in OC — Free Family Events',
@@ -23,42 +21,58 @@ const CATEGORIES: { value: EventCategory | 'all'; label: string; emoji: string }
   { value: 'community', label: 'Community',  emoji: '👋' },
 ]
 
-function scrapedToSeed(e: ScrapedEvent, i: number): SeedEvent {
-  const gradients = [
-    'from-blue-400 to-cyan-400',
-    'from-green-400 to-emerald-500',
-    'from-violet-400 to-purple-500',
-    'from-orange-400 to-amber-400',
-    'from-pink-400 to-rose-400',
-    'from-teal-400 to-cyan-400',
-  ]
+const GRADIENTS = [
+  'from-blue-400 to-cyan-400',
+  'from-green-400 to-emerald-500',
+  'from-violet-400 to-purple-500',
+  'from-orange-400 to-amber-400',
+  'from-pink-400 to-rose-400',
+  'from-teal-400 to-cyan-400',
+]
+
+// Map a Supabase events row to the SeedEvent shape EventListItem expects
+function dbEventToSeed(ev: Record<string, unknown>, i: number): SeedEvent {
+  const title = String(ev.title ?? '')
+  const slug  = String(
+    ev.slug ??
+    title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') ||
+    `event-${i}`
+  )
   return {
-    id: `scraped-${i}`,
-    slug: `event-${i}`,
-    title: e.title,
-    description: e.description ?? '',
-    date: e.date ?? '',
-    time: e.time ?? '',
-    location: e.location ?? '',
-    city: e.city ?? 'Orange County',
-    price: e.price ?? 'Free',
-    is_free: e.is_free ?? true,
-    url: e.url ?? null,
-    category: 'community',
-    tags: [],
-    placeholderEmoji: '📅',
-    placeholderGradient: gradients[i % gradients.length],
+    id:                  String(ev.id ?? `db-${i}`),
+    slug,
+    title,
+    description:         String(ev.description ?? ''),
+    date:                String(ev.event_date ?? ''),
+    time:                String(ev.event_time ?? ''),
+    location:            String(ev.location_name ?? ''),
+    city:                String(ev.city ?? 'Orange County'),
+    price:               String(ev.price ?? 'Free'),
+    is_free:             Boolean(ev.is_free ?? true),
+    url:                 ev.source_url ? String(ev.source_url) : null,
+    category:            'community',
+    tags:                [],
+    placeholderEmoji:    '📅',
+    placeholderGradient: GRADIENTS[i % GRADIENTS.length],
   }
 }
 
-function loadScrapedEvents(): SeedEvent[] {
+async function loadDbEvents(): Promise<SeedEvent[]> {
   try {
-    const p = path.join(process.cwd(), '..', 'oc_events_latest.json')
-    if (!existsSync(p)) return []
-    const raw = JSON.parse(readFileSync(p, 'utf-8'))
-    const events: ScrapedEvent[] = Array.isArray(raw) ? raw : raw.events ?? []
-    return events.map((e, i) => scrapedToSeed(e, i))
-  } catch {
+    const service = createServiceClient()
+    const { data, error } = await service
+      .from('events')
+      .select('*')
+      .order('event_date', { ascending: true })
+      .limit(100)
+
+    if (error) {
+      console.error('[events page] Supabase error:', error.message)
+      return []
+    }
+    return (data ?? []).map((ev, i) => dbEventToSeed(ev as Record<string, unknown>, i))
+  } catch (err) {
+    console.error('[events page] Load failed:', err)
     return []
   }
 }
@@ -71,8 +85,10 @@ export default async function EventsPage({
   const { cat } = await searchParams
   const weekRange = getWeekRange()
 
-  const scraped = loadScrapedEvents()
-  const baseEvents: SeedEvent[] = scraped.length > 0 ? scraped : SEED_EVENTS
+  // Primary source: Supabase events table (approved content).
+  // Fallback: curated seed events so the page is never empty.
+  const dbEvents = await loadDbEvents()
+  const baseEvents: SeedEvent[] = dbEvents.length > 0 ? dbEvents : SEED_EVENTS
 
   const filteredEvents =
     cat && cat !== 'all'
