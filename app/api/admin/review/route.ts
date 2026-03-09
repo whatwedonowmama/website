@@ -1,12 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, getUser } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 // POST /api/admin/review
 // Body: { id, action: 'approve' | 'reject' | 'edit', updates?: Partial<PendingContent> }
 export async function POST(req: NextRequest) {
-  const user = await getUser()
-  if (!user || user.role !== 'admin') {
+  // Verify authentication via session cookie
+  const supabase = await createClient()
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+  if (!authUser) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  // Use service client to bypass RLS for role check and mutations
+  const service = createServiceClient()
+  const { data: profile } = await service
+    .from('users')
+    .select('role, id')
+    .eq('id', authUser.id)
+    .single()
+
+  if (!profile || profile.role !== 'admin') {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
   const body = await req.json()
@@ -16,10 +30,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing id or action' }, { status: 400 })
   }
 
-  const supabase = await createClient()
+  // Use service client for all DB operations (bypasses RLS)
+  const supabaseService = service
 
   // ── Fetch the pending item ──
-  const { data: item, error: fetchError } = await supabase
+  const { data: item, error: fetchError } = await supabaseService
     .from('pending_content')
     .select('*')
     .eq('id', id)
@@ -31,9 +46,9 @@ export async function POST(req: NextRequest) {
 
   // ── REJECT / SKIP ──
   if (action === 'reject') {
-    await supabase
+    await supabaseService
       .from('pending_content')
-      .update({ status: 'rejected', reviewed_at: new Date().toISOString(), reviewed_by: user.id })
+      .update({ status: 'rejected', reviewed_at: new Date().toISOString(), reviewed_by: profile.id })
       .eq('id', id)
 
     return NextResponse.json({ ok: true, action: 'rejected' })
@@ -51,7 +66,7 @@ export async function POST(req: NextRequest) {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '')
 
-      await supabase.from('events').upsert({
+      await supabaseService.from('events').upsert({
         title:         merged.title,
         description:   merged.description,
         event_date:    merged.event_date,
@@ -72,7 +87,7 @@ export async function POST(req: NextRequest) {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '')
 
-      await supabase.from('resources').upsert({
+      await supabaseService.from('resources').upsert({
         slug,
         title:          merged.title,
         excerpt:        merged.description,
@@ -86,9 +101,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Mark as approved
-    await supabase
+    await supabaseService
       .from('pending_content')
-      .update({ status: 'approved', reviewed_at: new Date().toISOString(), reviewed_by: user.id })
+      .update({ status: 'approved', reviewed_at: new Date().toISOString(), reviewed_by: profile.id })
       .eq('id', id)
 
     return NextResponse.json({ ok: true, action: 'approved' })
@@ -104,7 +119,7 @@ export async function POST(req: NextRequest) {
       Object.entries(updates ?? {}).filter(([k]) => allowedFields.includes(k))
     )
 
-    await supabase
+    await supabaseService
       .from('pending_content')
       .update(safeUpdates)
       .eq('id', id)

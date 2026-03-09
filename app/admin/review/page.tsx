@@ -11,12 +11,19 @@ export default function ReviewPage() {
   const [filter, setFilter]     = useState<Filter>('all')
   const [loading, setLoading]   = useState(true)
   const [done, setDone]         = useState<string[]>([])
+  const [apiError, setApiError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
+    setApiError(null)
     const res  = await fetch('/api/admin/pending')
     const data = await res.json()
-    setItems(data.items ?? [])
+    if (!res.ok) {
+      setApiError(`API ${res.status}: ${data.error ?? 'Unknown error'}`)
+      setItems([])
+    } else {
+      setItems(data.items ?? [])
+    }
     setLoading(false)
   }, [])
 
@@ -61,6 +68,13 @@ export default function ReviewPage() {
           </button>
         ))}
       </div>
+
+      {/* API Error */}
+      {apiError && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          {apiError}
+        </div>
+      )}
 
       {/* Cards */}
       {loading ? (
