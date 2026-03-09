@@ -14,6 +14,11 @@ on:
         default: 'false'
         type: choice
         options: ['false', 'true']
+      site:
+        description: 'Scrape only this site by name (leave blank for all sites)'
+        required: false
+        default: ''
+        type: string
       dry_run:
         description: 'Dry run — scrape but do NOT push to Supabase'
         required: false
@@ -47,14 +52,21 @@ jobs:
 
       # ── 4. Run the scraper ─────────────────────────────────────────────────
       - name: Run events scraper
+        env:
+          SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: |
-          if [ "${{ github.event.inputs.force }}" = "true" ]; then
-            echo "Running with --force flag"
-            python events_scraper.py --force
+          ARGS=""
+          if [ "${{ github.event.inputs.site }}" != "" ]; then
+            echo "Scraping single site: ${{ github.event.inputs.site }}"
+            ARGS="--site \"${{ github.event.inputs.site }}\""
+          elif [ "${{ github.event.inputs.force }}" = "true" ]; then
+            echo "Running with --force flag (all sites)"
+            ARGS="--force"
           else
             echo "Running normal schedule"
-            python events_scraper.py
           fi
+          eval python events_scraper.py $ARGS
 
       # ── 5. Push scraped events to Supabase ─────────────────────────────────
       - name: Push to Supabase pending_content

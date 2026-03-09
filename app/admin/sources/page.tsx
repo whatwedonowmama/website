@@ -38,6 +38,8 @@ interface Source {
 
 const FREQ_LABELS = { weekly: 'Weekly', monthly: 'Monthly', oneshot: 'Once' }
 
+type ScrapeStatus = { type: 'idle' } | { type: 'loading' } | { type: 'ok'; message: string; runsUrl: string } | { type: 'error'; message: string }
+
 export default function SourcesPage() {
   const [sources, setSources]     = useState<Source[]>([])
   const [loading, setLoading]     = useState(true)
@@ -45,11 +47,14 @@ export default function SourcesPage() {
   const [error, setError]         = useState<string | null>(null)
   const [showForm, setShowForm]   = useState(false)
 
+  // Scrape-now state — keyed by source name, or 'all' for the global button
+  const [scrapeStatus, setScrapeStatus] = useState<Record<string, ScrapeStatus>>({})
+
   // New source form fields
-  const [newUrl, setNewUrl]         = useState('')
-  const [newName, setNewName]       = useState('')
-  const [newFreq, setNewFreq]       = useState<'weekly' | 'monthly'>('weekly')
-  const [newNotes, setNewNotes]     = useState('')
+  const [newUrl, setNewUrl]     = useState('')
+  const [newName, setNewName]   = useState('')
+  const [newFreq, setNewFreq]   = useState<'weekly' | 'monthly'>('weekly')
+  const [newNotes, setNewNotes] = useState('')
 
   async function load() {
     setLoading(true)
@@ -99,25 +104,102 @@ export default function SourcesPage() {
     setSources(s => s.filter(x => x.id !== id))
   }
 
+  // Trigger a one-off scrape via GitHub Actions API
+  async function scrapeNow(key: string, siteName?: string) {
+    setScrapeStatus(s => ({ ...s, [key]: { type: 'loading' } }))
+    const res = await fetch('/api/admin/scrape-now', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ site: siteName ?? '' }),
+    })
+    const data = await res.json()
+    if (res.ok) {
+      setScrapeStatus(s => ({ ...s, [key]: { type: 'ok', message: data.message, runsUrl: data.runsUrl } }))
+      // Auto-clear success after 10s
+      setTimeout(() => setScrapeStatus(s => ({ ...s, [key]: { type: 'idle' } })), 10000)
+    } else {
+      setScrapeStatus(s => ({ ...s, [key]: { type: 'error', message: data.error ?? 'Failed to trigger scrape' } }))
+    }
+  }
+
+  function ScrapeButton({ sourceKey, siteName, small = false }: { sourceKey: string; siteName?: string; small?: boolean }) {
+    const status = scrapeStatus[sourceKey] ?? { type: 'idle' }
+    const base = small
+      ? 'text-xs px-2.5 py-1 rounded-lg font-medium transition-all'
+      : 'text-sm px-4 py-2 rounded-xl font-semibold transition-all'
+
+    if (status.type === 'loading') {
+      return (
+        <button disabled className={`${base} bg-gray-100 text-gray-400 cursor-not-allowed`}>
+          <span className="animate-pulse">Triggering…</span>
+        </button>
+      )
+    }
+    if (status.type === 'ok') {
+      return (
+        <div className="flex items-center gap-1.5">
+          <span className={`${small ? 'text-xs' : 'text-sm'} text-green-600 font-medium`}>✓ Triggered</span>
+          <a href={status.runsUrl} target="_blank" rel="noopener noreferrer"
+            className={`${small ? 'text-xs' : 'text-sm'} text-brand-purple hover:underline`}>
+            View run →
+          </a>
+        </div>
+      )
+    }
+    if (status.type === 'error') {
+      return (
+        <div className="flex flex-col gap-0.5">
+          <button onClick={() => scrapeNow(sourceKey, siteName)}
+            className={`${base} bg-red-50 text-red-600 border border-red-200 hover:bg-red-100`}>
+            Retry
+          </button>
+          <span className={`${small ? 'text-[10px]' : 'text-xs'} text-red-500 max-w-[160px] truncate`}
+            title={status.message}>
+            {status.message}
+          </span>
+        </div>
+      )
+    }
+    return (
+      <button onClick={() => scrapeNow(sourceKey, siteName)}
+        className={`${base} bg-brand-lavender text-brand-purple hover:bg-brand-lavender/80 hover:scale-105`}>
+        ⚡ Scrape now
+      </button>
+    )
+  }
+
   return (
     <div className="max-w-3xl mx-auto px-4 py-10">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
         <div>
           <Link href="/admin" className="text-sm text-brand-purple hover:underline">← Admin</Link>
           <h1 className="font-display text-2xl font-bold text-brand-navy mt-1">Scrape Sources</h1>
         </div>
-        <button
-          onClick={() => setShowForm(f => !f)}
-          className="btn-primary text-sm"
-        >
-          + Add URL
-        </button>
+        <div className="flex gap-2">
+          <ScrapeButton sourceKey="all" />
+          <button onClick={() => setShowForm(f => !f)} className="btn-primary text-sm">
+            + Add URL
+          </button>
+        </div>
       </div>
-      <p className="text-sm text-gray-500 mb-6">
+      <p className="text-sm text-gray-500 mb-1">
         Websites the scraper visits each week. Add a new URL and it will be picked up on the next Monday run.
       </p>
+      {/* Global scrape status message */}
+      {scrapeStatus['all']?.type === 'ok' && (
+        <p className="text-xs text-green-600 mb-4 font-medium">
+          ✓ {scrapeStatus['all'].message}{' '}
+          <a href={scrapeStatus['all'].runsUrl} target="_blank" rel="noopener noreferrer" className="underline">Watch it run →</a>
+        </p>
+      )}
+      {scrapeStatus['all']?.type === 'error' && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          {scrapeStatus['all'].message}
+        </div>
+      )}
+      {!(scrapeStatus['all']?.type === 'ok' || scrapeStatus['all']?.type === 'error') && <div className="mb-6" />}
 
       {error && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{error}</div>
@@ -125,41 +207,26 @@ export default function SourcesPage() {
 
       {/* Add source form */}
       {showForm && (
-        <form
-          onSubmit={addSource}
-          className="mb-6 bg-white border border-brand-purple/20 rounded-3xl p-5 flex flex-col gap-3"
-        >
+        <form onSubmit={addSource}
+          className="mb-6 bg-white border border-brand-purple/20 rounded-3xl p-5 flex flex-col gap-3">
           <h2 className="font-semibold text-brand-navy text-sm">Add a new source</h2>
 
           <label className="flex flex-col gap-1">
             <span className="text-xs font-medium text-gray-500">Website URL <span className="text-red-400">*</span></span>
-            <input
-              className="input-field text-sm"
-              type="url"
-              placeholder="https://example.com/events"
-              value={newUrl}
-              onChange={e => setNewUrl(e.target.value)}
-              required
-            />
+            <input className="input-field text-sm" type="url" placeholder="https://example.com/events"
+              value={newUrl} onChange={e => setNewUrl(e.target.value)} required />
           </label>
 
           <div className="grid grid-cols-2 gap-3">
             <label className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500">Name (optional)</span>
-              <input
-                className="input-field text-sm"
-                placeholder="Auto-detected from URL"
-                value={newName}
-                onChange={e => setNewName(e.target.value)}
-              />
+              <input className="input-field text-sm" placeholder="Auto-detected from URL"
+                value={newName} onChange={e => setNewName(e.target.value)} />
             </label>
             <label className="flex flex-col gap-1">
               <span className="text-xs font-medium text-gray-500">Frequency</span>
-              <select
-                className="input-field text-sm"
-                value={newFreq}
-                onChange={e => setNewFreq(e.target.value as 'weekly' | 'monthly')}
-              >
+              <select className="input-field text-sm" value={newFreq}
+                onChange={e => setNewFreq(e.target.value as 'weekly' | 'monthly')}>
                 <option value="weekly">Weekly</option>
                 <option value="monthly">Monthly</option>
               </select>
@@ -168,34 +235,24 @@ export default function SourcesPage() {
 
           <label className="flex flex-col gap-1">
             <span className="text-xs font-medium text-gray-500">Notes (optional)</span>
-            <input
-              className="input-field text-sm"
-              placeholder="e.g. Good source for weekend activities"
-              value={newNotes}
-              onChange={e => setNewNotes(e.target.value)}
-            />
+            <input className="input-field text-sm" placeholder="e.g. Good source for weekend activities"
+              value={newNotes} onChange={e => setNewNotes(e.target.value)} />
           </label>
 
           <div className="flex gap-2 pt-1">
-            <button
-              type="submit"
-              disabled={saving || !newUrl.trim()}
-              className="flex-1 btn-primary text-sm py-2 justify-center disabled:opacity-50"
-            >
+            <button type="submit" disabled={saving || !newUrl.trim()}
+              className="flex-1 btn-primary text-sm py-2 justify-center disabled:opacity-50">
               {saving ? 'Adding…' : 'Add source'}
             </button>
-            <button
-              type="button"
-              onClick={() => setShowForm(false)}
-              className="flex-1 text-sm py-2 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50"
-            >
+            <button type="button" onClick={() => setShowForm(false)}
+              className="flex-1 text-sm py-2 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50">
               Cancel
             </button>
           </div>
         </form>
       )}
 
-      {/* Built-in sources (from sites.yaml — always active) */}
+      {/* Built-in sources */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-3">
           <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Built-in sources</h2>
@@ -219,14 +276,21 @@ export default function SourcesPage() {
                   {src.url}
                 </a>
                 <p className="text-xs text-gray-400 mt-1">{src.notes}</p>
+                {scrapeStatus[src.name]?.type === 'ok' && (
+                  <p className="text-xs text-green-600 mt-1 font-medium">
+                    ✓ {(scrapeStatus[src.name] as { type: 'ok'; message: string }).message}
+                  </p>
+                )}
               </div>
-              <span className="text-xs text-gray-300 shrink-0 mt-1">Built-in</span>
+              <div className="shrink-0 mt-0.5">
+                <ScrapeButton sourceKey={src.name} siteName={src.name} small />
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Custom sources (added via UI) */}
+      {/* Custom sources */}
       <div className="flex items-center gap-2 mb-3">
         <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Custom sources</h2>
         {!loading && sources.length > 0 && (
@@ -234,7 +298,6 @@ export default function SourcesPage() {
         )}
       </div>
 
-      {/* Sources list */}
       {loading ? (
         <div className="flex flex-col gap-3">
           {[1, 2, 3].map(n => (
@@ -250,19 +313,15 @@ export default function SourcesPage() {
       ) : (
         <div className="flex flex-col gap-3">
           {sources.map(src => (
-            <div
-              key={src.id}
+            <div key={src.id}
               className={`bg-white rounded-2xl border p-4 flex items-start justify-between gap-4 transition-opacity ${
                 src.enabled ? 'border-gray-100' : 'border-gray-100 opacity-50'
-              }`}
-            >
+              }`}>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold text-brand-navy text-sm">{src.name}</span>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    src.enabled
-                      ? 'bg-green-50 text-green-700 border border-green-200'
-                      : 'bg-gray-100 text-gray-400'
+                    src.enabled ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-gray-100 text-gray-400'
                   }`}>
                     {src.enabled ? '● Active' : '○ Paused'}
                   </span>
@@ -270,38 +329,34 @@ export default function SourcesPage() {
                     {FREQ_LABELS[src.frequency]}
                   </span>
                 </div>
-                <a
-                  href={src.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-gray-400 hover:text-brand-purple hover:underline truncate block mt-0.5"
-                >
+                <a href={src.url} target="_blank" rel="noopener noreferrer"
+                  className="text-xs text-gray-400 hover:text-brand-purple hover:underline truncate block mt-0.5">
                   {src.url}
                 </a>
-                {src.notes && (
-                  <p className="text-xs text-gray-400 mt-1">{src.notes}</p>
-                )}
+                {src.notes && <p className="text-xs text-gray-400 mt-1">{src.notes}</p>}
                 {src.last_scraped_at && (
                   <p className="text-xs text-gray-300 mt-1">
                     Last scraped {new Date(src.last_scraped_at).toLocaleDateString()}
                   </p>
                 )}
+                {scrapeStatus[src.id]?.type === 'ok' && (
+                  <p className="text-xs text-green-600 mt-1 font-medium">
+                    ✓ {(scrapeStatus[src.id] as { type: 'ok'; message: string }).message}
+                  </p>
+                )}
               </div>
-
-              {/* Actions */}
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => toggleEnabled(src)}
-                  className="text-xs text-gray-500 hover:text-brand-purple px-2 py-1 rounded-lg hover:bg-brand-lavender/50 transition-colors"
-                >
-                  {src.enabled ? 'Pause' : 'Enable'}
-                </button>
-                <button
-                  onClick={() => deleteSource(src.id)}
-                  className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
-                >
-                  Remove
-                </button>
+              <div className="flex flex-col items-end gap-2 shrink-0">
+                <ScrapeButton sourceKey={src.id} siteName={src.name} small />
+                <div className="flex items-center gap-1">
+                  <button onClick={() => toggleEnabled(src)}
+                    className="text-xs text-gray-500 hover:text-brand-purple px-2 py-1 rounded-lg hover:bg-brand-lavender/50 transition-colors">
+                    {src.enabled ? 'Pause' : 'Enable'}
+                  </button>
+                  <button onClick={() => deleteSource(src.id)}
+                    className="text-xs text-gray-400 hover:text-red-500 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors">
+                    Remove
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -310,8 +365,9 @@ export default function SourcesPage() {
 
       {/* Note */}
       <div className="mt-6 bg-brand-lavender/40 rounded-xl p-4 text-xs text-brand-navy/70 leading-relaxed">
-        Custom sources are merged with the built-in ones at scrape time.
-        The scraper runs every <strong>Monday at 6am PT</strong> via GitHub Actions.
+        <strong>⚡ Scrape now</strong> triggers a one-off GitHub Actions run — results appear in Content Review in ~2 minutes.
+        It doesn&apos;t affect the weekly Monday schedule.
+        Requires <code>GITHUB_PAT</code> in Vercel environment variables.
       </div>
     </div>
   )
