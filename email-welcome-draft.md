@@ -3,7 +3,7 @@
 
 ---
 
-**Subject line:** you found us. welcome, mama. 🌸
+**Subject line:** you found us. welcome! 🌸
 **Preview text:** Here's what's waiting for you (hint: it's really good)
 
 ---
@@ -47,7 +47,7 @@ We're building something special for OC families. You'll be the first to know.
 
 One more thing — if you ever want to reply to this email, please do. We read every single one.
 
-You've got this, mama.
+You've got this.
 
 — The whatwedonowmama team 💜
 
@@ -72,7 +72,7 @@ You've got this, mama.
 |---|---|
 | From name | whatwedonowmama |
 | Reply-to | hello@whatwedonowmama.com |
-| Subject | you found us. welcome, mama. 🌸 |
+| Subject | you found us. welcome! 🌸 |
 | Preview text | Here's what's waiting for you (hint: it's really good) |
 | Send delay | Immediately |
 | Double opt-in | Off (single opt-in for better conversion) |

@@ -20,7 +20,7 @@ export default function SubscribedPage() {
         <div className="flex flex-col gap-2">
           <p className="font-script text-brand-purple text-2xl">you're in!</p>
           <h1 className="font-display text-3xl md:text-4xl font-bold text-brand-navy leading-tight">
-            Welcome to the community, mama.
+            Welcome to the community!
           </h1>
         </div>
 

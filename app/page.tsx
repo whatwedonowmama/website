@@ -45,7 +45,7 @@ export default async function HomePage() {
             {/* Left: Text */}
             <div className="flex-1 text-center md:text-left flex flex-col gap-5">
               <p className="font-script text-brand-gold text-2xl">
-                for Orange County mamas
+                for Orange County parents
               </p>
 
               {/* ① Brand name — intentional childlike grammar */}
