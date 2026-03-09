@@ -1,0 +1,89 @@
+# ============================================================
+# whatwedonowmama — Newsletter Formatter Config
+# ============================================================
+# Fill in your API keys below, then run:
+#   python newsletter_formatter.py
+#
+# HOW TO GET YOUR KEYS:
+#
+# BEEHIIV:
+#   1. Log into Beehiiv
+#   2. Settings → API → Generate API Key
+#   3. Copy the key → paste into beehiiv_api_key below
+#   4. Also grab your Publication ID:
+#      Settings → Publication Details → scroll to "Publication ID"
+#      It looks like: pub_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+#
+# BUFFER:
+#   1. Log into buffer.com
+#   2. Account Settings → Apps → Create App (or use existing)
+#   3. Get your Access Token → paste into buffer_access_token below
+#   4. To get your profile IDs, run:
+#      python newsletter_formatter.py --list-buffer-profiles
+#      Then paste the IDs you want to post to below
+# ============================================================
+
+
+# ---- BEEHIIV SETTINGS --------------------------------------
+beehiiv:
+  api_key: "YOUR_BEEHIIV_API_KEY_HERE"
+  publication_id: "pub_YOUR_PUBLICATION_ID_HERE"
+
+  # Newsletter post settings
+  post_status: "draft"          # Always "draft" — you review before sending
+  platform: "both"              # "email", "web", or "both"
+
+  # Newsletter identity
+  from_name: "whatwedonowmama"
+  reply_to: "hello@whatwedonowmama.com"    # Update once you have your domain email
+
+
+# ---- BUFFER SETTINGS ----------------------------------------
+buffer:
+  access_token: "YOUR_BUFFER_ACCESS_TOKEN_HERE"
+
+  # Paste your profile IDs here (run --list-buffer-profiles to find them)
+  profile_ids:
+    - "YOUR_INSTAGRAM_PROFILE_ID"
+    - "YOUR_FACEBOOK_PROFILE_ID"
+    # - "YOUR_TIKTOK_PROFILE_ID"   # Uncomment when ready
+    # - "YOUR_TWITTER_PROFILE_ID"
+
+  # When to schedule social posts (days from today, at this hour local time)
+  post_days_ahead: 1
+  post_hour: 9          # 9 = 9:00 AM
+  posts_per_run: 4      # How many social posts to create per newsletter run
+
+
+# ---- NEWSLETTER FORMAT SETTINGS ----------------------------
+newsletter:
+  # How many events to include in the newsletter
+  max_events_total: 8
+  max_free_events: 4
+  max_paid_events: 2
+  max_weekend_picks: 3
+
+  # Intro copy (customize this — it appears at the top of every issue)
+  intro_template: |
+    Hey OC fam! 👋
+
+    Here's your weekly roundup of the best family-friendly things happening
+    in Orange County. As always — no fluff, no filler, just the good stuff.
+
+  # Outro copy (appears at the bottom of every issue)
+  outro_template: |
+    That's your week, OC! As always, reply to this email with events we
+    missed — we read every one. See you out there! 🌞
+
+    — The whatwedonowmama team
+
+  # Social post template (use {title}, {date}, {city}, {price}, {url})
+  social_template: |
+    🗓️ {title}
+    📅 {date}
+    📍 {city}, OC
+    💰 {price}
+
+    {cta}
+
+    #OrangeCounty #OCfamilies #OCkids #whatwedonowmama #OCevents

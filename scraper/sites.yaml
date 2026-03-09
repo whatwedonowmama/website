@@ -1,0 +1,110 @@
+# ============================================================
+# whatwedonowmama — Events Sources Config
+# ============================================================
+# HOW TO ADD A NEW SITE:
+#   1. Copy any block below and paste it at the bottom of the list
+#   2. Fill in name, url, frequency, and tags
+#   3. Set enabled: true
+#   4. Run: python events_scraper.py --list  (to verify it's loaded)
+#   5. Run: python events_scraper.py --site "Your Site Name"  (to test it)
+#
+# FREQUENCIES:
+#   weekly  — scrapes every 7 days
+#   monthly — scrapes every 30 days
+#   oneshot — scrapes once only, then disables itself
+#
+# COMMAND LINE SHORTCUTS:
+#   python events_scraper.py              → normal run (respects schedule)
+#   python events_scraper.py --force      → scrape ALL sites now
+#   python events_scraper.py --list       → show all sites + last run date
+#   python events_scraper.py --site "OC Parks"  → scrape one site only
+# ============================================================
+
+
+# ---- REGION SETTINGS ----------------------------------------
+region:
+  name: "Orange County, CA"
+  cities:
+    - Irvine
+    - Newport Beach
+    - Anaheim
+    - Huntington Beach
+    - Costa Mesa
+    - Fullerton
+    - Santa Ana
+    - Orange
+    - Laguna Beach
+    - San Clemente
+    - Laguna Niguel
+    - Mission Viejo
+    - Lake Forest
+    - Aliso Viejo
+
+
+# ---- EVENT SOURCES ------------------------------------------
+sources:
+
+  # HIGH-FREQUENCY SOURCES (weekly — events change constantly)
+
+  - name: "Eventbrite OC"
+    url: "https://www.eventbrite.com/d/ca--orange-county/family-events/"
+    frequency: weekly
+    enabled: true
+    max_events: 20
+    tags: [events, general, family]
+    notes: "Main Eventbrite OC family events page. Updates constantly."
+
+  - name: "Meetup OC Families"
+    url: "https://www.meetup.com/find/?keywords=family+kids&location=Orange+County%2C+CA&source=EVENTS"
+    frequency: weekly
+    enabled: true
+    max_events: 15
+    tags: [meetup, community, social]
+    notes: "OC family meetup groups. Weekly is appropriate — groups post new events often."
+
+  # LOW-FREQUENCY SOURCES (monthly — content is more stable)
+
+  - name: "OC Parks & Recreation"
+    url: "https://ocparks.com/parks-trails/special-events"
+    frequency: monthly
+    enabled: true
+    max_events: 20
+    tags: [parks, outdoor, free]
+    notes: "OC Parks seasonal/special events. Monthly is fine — they plan further ahead."
+
+  # ---- ADD NEW SITES BELOW THIS LINE -------------------------
+  # Copy any block above, paste here, and fill in your details.
+  #
+  # Example (uncomment to activate):
+  #
+  # - name: "OC Public Libraries"
+  #   url: "https://ocpl.org/events"
+  #   frequency: weekly
+  #   enabled: false
+  #   max_events: 15
+  #   tags: [library, free, indoor, educational]
+  #   notes: "OCPL has tons of free family programming, especially storytime."
+  #
+  # - name: "Irvine Spectrum Events"
+  #   url: "https://www.irvinespectrum.com/events/"
+  #   frequency: weekly
+  #   enabled: false
+  #   max_events: 10
+  #   tags: [shopping, outdoor, family, free]
+  #   notes: "Free family events at Irvine Spectrum — movie nights, seasonal stuff."
+  #
+  # - name: "Segerstrom Center Family"
+  #   url: "https://www.scfta.org/events?type=Family"
+  #   frequency: monthly
+  #   enabled: false
+  #   max_events: 10
+  #   tags: [arts, paid, indoor, school-age]
+  #   notes: "Performing arts center — more curated, less frequent. Monthly is fine."
+  #
+  # - name: "Disneyland Area Events"
+  #   url: "https://disneyland.disney.go.com/events-tours/"
+  #   frequency: monthly
+  #   enabled: false
+  #   max_events: 5
+  #   tags: [paid, family, theme-park]
+  #   notes: "Only changes monthly — seasonal events and limited-time offerings."
