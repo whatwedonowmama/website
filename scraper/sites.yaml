@@ -46,14 +46,6 @@ sources:
 
   # HIGH-FREQUENCY SOURCES (weekly — events change constantly)
 
-  - name: "Eventbrite OC"
-    url: "https://www.eventbrite.com/d/ca--orange-county/family-events/"
-    frequency: weekly
-    enabled: true
-    max_events: 20
-    tags: [events, general, family]
-    notes: "Main Eventbrite OC family events page. Updates constantly."
-
   - name: "Meetup OC Families"
     url: "https://www.meetup.com/find/?keywords=family+kids&location=Orange+County%2C+CA&source=EVENTS"
     frequency: weekly

@@ -5,12 +5,6 @@ import Link from 'next/link'
 // These are hardcoded in scraper/sites.yaml and always active
 const BUILTIN_SOURCES = [
   {
-    name:      'Eventbrite OC',
-    url:       'https://www.eventbrite.com/d/ca--orange-county/family-events/',
-    frequency: 'weekly' as const,
-    notes:     'Main Eventbrite OC family events page. Updates constantly.',
-  },
-  {
     name:      'Meetup OC Families',
     url:       'https://www.meetup.com/find/?keywords=family+kids&location=Orange+County%2C+CA&source=EVENTS',
     frequency: 'weekly' as const,
@@ -18,7 +12,7 @@ const BUILTIN_SOURCES = [
   },
   {
     name:      'OC Parks & Recreation',
-    url:       'https://ocparks.com/parks-trails/special-events',
+    url:       'https://www.ocparks.com/events',
     frequency: 'monthly' as const,
     notes:     'OC Parks seasonal & special events.',
   },
