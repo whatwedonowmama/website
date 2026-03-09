@@ -198,6 +198,30 @@ export default async function EventPage({ params }: Props) {
           </div>
         </div>
 
+        {/* ── STAY IN THE LOOP ── */}
+        <div className="mt-14 bg-brand-navy rounded-3xl p-8 text-center flex flex-col items-center gap-4">
+          <p className="font-script text-brand-gold text-2xl">stay in the loop</p>
+          <h2 className="font-display text-2xl font-bold text-white">
+            Get the best OC events in your inbox.
+          </h2>
+          <p className="text-gray-400 text-sm max-w-sm">
+            Every Friday we send a hand-picked list of family events happening across Orange County. Free, always.
+          </p>
+          <form action="/api/subscribe" method="POST" className="w-full max-w-sm flex flex-col sm:flex-row gap-3">
+            <input
+              type="email"
+              name="email"
+              required
+              placeholder="you@email.com"
+              className="flex-1 rounded-2xl px-4 py-3 text-sm bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-brand-gold"
+            />
+            <button type="submit" className="btn-coral px-5 py-3 whitespace-nowrap">
+              Subscribe free →
+            </button>
+          </form>
+          <p className="text-gray-600 text-xs">No spam. Unsubscribe any time.</p>
+        </div>
+
         {/* Back nav */}
         <div className="mt-10 pt-6 border-t border-gray-200">
           <Link href="/events" className="text-sm font-semibold text-brand-purple hover:underline">
