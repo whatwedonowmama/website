@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '')
 
-      await supabaseService.from('events').upsert({
+      const { error: upsertError } = await supabaseService.from('events').upsert({
         title:         merged.title,
         description:   merged.description,
         event_date:    merged.event_date,
@@ -78,7 +78,15 @@ export async function POST(req: NextRequest) {
         source_url:    merged.source_url,
         is_pinned:     false,
         slug,
-      })
+      }, { onConflict: 'slug' })
+
+      if (upsertError) {
+        console.error('[review/approve] events upsert failed:', upsertError)
+        return NextResponse.json(
+          { error: `Failed to publish event: ${upsertError.message}` },
+          { status: 500 }
+        )
+      }
     }
 
     if (item.content_type === 'resource') {
