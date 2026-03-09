@@ -240,7 +240,12 @@ def main():
     real_events = [e for e in events if not e.get("is_mock")]
     mock_count  = len(events) - len(real_events)
     if mock_count:
-        logger.info(f"Skipping {mock_count} mock/fallback events")
+        logger.warning(f"⚠  Skipping {mock_count} mock/fallback events (the site was unreachable or returned no parseable events)")
+    if not real_events and mock_count:
+        print(f"\n⚠  ALL {mock_count} events were mock/fallback data — nothing to push to Supabase.")
+        print("   This usually means the scraped website blocked the request or has no parseable event listings.")
+        print("   Check the events_scraper.py output above to see which sites fell back to mock data.")
+        return 0
 
     # ── Deduplication ─────────────────────────────────────────
     # Step 1: dedup within this batch (same event from multiple sources)
