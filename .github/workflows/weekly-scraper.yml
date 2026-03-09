@@ -1,18 +1,21 @@
 name: Weekly Events Scraper
 
 on:
+  # ── Runs every Monday at 6:00 AM PT (14:00 UTC) ──────────────────────────
   schedule:
     - cron: '0 14 * * 1'
+
+  # ── Also allows manual trigger from GitHub Actions tab ───────────────────
   workflow_dispatch:
     inputs:
       force:
-        description: 'Force scrape all sites'
+        description: 'Force scrape all sites (ignore schedule)'
         required: false
         default: 'false'
         type: choice
         options: ['false', 'true']
       dry_run:
-        description: 'Dry run — no Supabase writes'
+        description: 'Dry run — scrape but do NOT push to Supabase'
         required: false
         default: 'false'
         type: choice
@@ -24,29 +27,36 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./scraper
+        working-directory: ./scraper  # Python files live in scraper/
 
     steps:
+      # ── 1. Checkout repo ───────────────────────────────────────────────────
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ── 2. Set up Python ───────────────────────────────────────────────────
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
           cache: 'pip'
 
+      # ── 3. Install dependencies ────────────────────────────────────────────
       - name: Install dependencies
         run: pip install requests beautifulsoup4 pyyaml python-dotenv
 
+      # ── 4. Run the scraper ─────────────────────────────────────────────────
       - name: Run events scraper
         run: |
           if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            echo "Running with --force flag"
             python events_scraper.py --force
           else
+            echo "Running normal schedule"
             python events_scraper.py
           fi
 
+      # ── 5. Push scraped events to Supabase ─────────────────────────────────
       - name: Push to Supabase pending_content
         if: ${{ github.event.inputs.dry_run != 'true' }}
         env:
@@ -54,10 +64,12 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
         run: python supabase_push.py
 
-      - name: Dry run preview
+      # ── 6. Dry run mode — just show what would be pushed ───────────────────
+      - name: Dry run preview (no Supabase writes)
         if: ${{ github.event.inputs.dry_run == 'true' }}
         run: python supabase_push.py --dry-run
 
+      # ── 7. Upload the events JSON as an artifact (30-day retention) ─────────
       - name: Upload events artifact
         uses: actions/upload-artifact@v4
         with:
