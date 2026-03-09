@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      const { error: upsertError } = await supabaseService.from('events').upsert({
+      const { error: insertError } = await supabaseService.from('events').insert({
         title:         merged.title,
         description:   merged.description,
         event_date:    isoDate,
@@ -97,12 +97,12 @@ export async function POST(req: NextRequest) {
         source_url:    merged.source_url,
         is_pinned:     false,
         slug,
-      }, { onConflict: 'slug' })
+      })
 
-      if (upsertError) {
-        console.error('[review/approve] events upsert failed:', upsertError)
+      if (insertError) {
+        console.error('[review/approve] events insert failed:', insertError)
         return NextResponse.json(
-          { error: `Failed to publish event: ${upsertError.message}` },
+          { error: `Failed to publish event: ${insertError.message}` },
           { status: 500 }
         )
       }
