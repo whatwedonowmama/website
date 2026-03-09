@@ -34,9 +34,7 @@ const GRADIENTS = [
 function dbEventToSeed(ev: Record<string, unknown>, i: number): SeedEvent {
   const title = String(ev.title ?? '')
   const slug  = String(
-    ev.slug ??
-    title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') ||
-    `event-${i}`
+    ev.slug ?? (title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `event-${i}`)
   )
   return {
     id:                  String(ev.id ?? `db-${i}`),
@@ -70,7 +68,7 @@ async function loadDbEvents(): Promise<SeedEvent[]> {
       console.error('[events page] Supabase error:', error.message)
       return []
     }
-    return (data ?? []).map((ev, i) => dbEventToSeed(ev as Record<string, unknown>, i))
+    return (data ?? []).map((ev: Record<string, unknown>, i: number) => dbEventToSeed(ev, i))
   } catch (err) {
     console.error('[events page] Load failed:', err)
     return []
