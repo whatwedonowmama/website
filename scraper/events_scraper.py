@@ -401,8 +401,12 @@ def scrape_site(site: dict, cities: list, session: requests.Session) -> list:
 
     try:
         response = session.get(url, timeout=REQUEST_TIMEOUT)
+        # Capture content before raise_for_status so AI can still try on 4xx pages
+        # (e.g. Eventbrite returns 405 but the body may still be useful)
+        if response.text and len(response.text) > 500:
+            html_content = response.text
         response.raise_for_status()
-        html_content = response.text
+
         soup = BeautifulSoup(response.content, "html.parser")
 
         # Try multiple common patterns for event cards

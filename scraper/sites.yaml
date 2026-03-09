@@ -65,12 +65,12 @@ sources:
   # LOW-FREQUENCY SOURCES (monthly — content is more stable)
 
   - name: "OC Parks & Recreation"
-    url: "https://ocparks.com/parks-trails/special-events"
+    url: "https://www.ocparks.com/events"
     frequency: monthly
     enabled: true
     max_events: 20
     tags: [parks, outdoor, free]
-    notes: "OC Parks seasonal/special events. Monthly is fine — they plan further ahead."
+    notes: "OC Parks seasonal/special events. URL updated March 2026 — old /parks-trails/special-events returns 404."
 
   # ---- ADD NEW SITES BELOW THIS LINE -------------------------
   # Copy any block above, paste here, and fill in your details.
