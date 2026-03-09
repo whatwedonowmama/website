@@ -40,6 +40,7 @@ const SOURCE_EMOJI: Record<string, string> = {
 export default function ReviewCard({ item, onDone, onApprove }: Props) {
   const [editing, setEditing]   = useState(false)
   const [loading, setLoading]   = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
   const [fields, setFields]     = useState({
     title:         item.title,
     description:   item.description ?? '',
@@ -55,16 +56,25 @@ export default function ReviewCard({ item, onDone, onApprove }: Props) {
 
   async function act(action: 'approve' | 'reject') {
     setLoading(true)
-    await fetch('/api/admin/review', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ id: item.id, action, updates: fields }),
-    })
-    setLoading(false)
-    if (action === 'approve') {
-      onApprove(formatForNotepad(fields))
+    setApiError(null)
+    try {
+      const res  = await fetch('/api/admin/review', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ id: item.id, action, updates: fields }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setApiError(data.error ?? `Server error (${res.status})`)
+        setLoading(false)
+        return
+      }
+      if (action === 'approve') onApprove(formatForNotepad(fields))
+      onDone(item.id)
+    } catch (e) {
+      setApiError('Network error — please try again')
     }
-    onDone(item.id)
+    setLoading(false)
   }
 
   async function saveEdit() {
@@ -276,6 +286,13 @@ export default function ReviewCard({ item, onDone, onApprove }: Props) {
               )}
             </div>
           </>
+        )}
+
+        {/* ── API error ── */}
+        {apiError && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-3 py-2">
+            ⚠️ {apiError}
+          </div>
         )}
 
         {/* ── Action buttons (only in read mode) ── */}

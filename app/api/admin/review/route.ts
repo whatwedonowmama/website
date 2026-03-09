@@ -67,10 +67,28 @@ export async function POST(req: NextRequest) {
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '')
 
+      // Normalise event_date to YYYY-MM-DD (Postgres date type rejects other formats)
+      // AI scrapers sometimes return "March 15, 2026" or "3/15/2026" etc.
+      function toIsoDate(raw: string | null | undefined): string | null {
+        if (!raw) return null
+        // Already ISO
+        if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10)
+        const parsed = new Date(raw)
+        if (!isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10)
+        return null
+      }
+      const isoDate = toIsoDate(merged.event_date)
+      if (!isoDate) {
+        return NextResponse.json(
+          { error: `Invalid event date "${merged.event_date}" — please edit the date to YYYY-MM-DD format before approving.` },
+          { status: 400 }
+        )
+      }
+
       const { error: upsertError } = await supabaseService.from('events').upsert({
         title:         merged.title,
         description:   merged.description,
-        event_date:    merged.event_date,
+        event_date:    isoDate,
         event_time:    merged.event_time,
         location_name: merged.location_name,
         city:          merged.city,
