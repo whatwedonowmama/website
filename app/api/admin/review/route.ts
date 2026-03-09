@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 // POST /api/admin/review
@@ -113,6 +114,11 @@ export async function POST(req: NextRequest) {
       .from('pending_content')
       .update({ status: 'approved', reviewed_at: new Date().toISOString(), reviewed_by: profile.id })
       .eq('id', id)
+
+    // Bust the page cache so approved content shows immediately
+    revalidatePath('/events')
+    revalidatePath('/')
+    revalidatePath('/resources')
 
     return NextResponse.json({ ok: true, action: 'approved' })
   }
