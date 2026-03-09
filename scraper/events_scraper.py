@@ -18,7 +18,7 @@ SCHEDULING (PythonAnywhere cron — runs every Monday at 9am):
     0 9 * * 1 /usr/bin/python3 /path/to/events_scraper.py
 
 DEPENDENCIES:
-    pip install requests beautifulsoup4 pyyaml
+    pip install requests beautifulsoup4 pyyaml anthropic
 
 OUTPUT FILES:
     oc_events_output.json   — All events from this run
@@ -267,10 +267,127 @@ def generate_mock_events(source_name: str, cities: list, tags: list, count: int 
 # GENERIC SITE SCRAPER
 # ============================================================================
 
+def ai_scrape_site(site: dict, html_content: str, cities: list, tags: list) -> list:
+    """
+    Use Claude (claude-haiku) to extract events from unstructured HTML.
+    Called automatically when the HTML pattern-matcher finds no events.
+    Requires ANTHROPIC_API_KEY environment variable.
+    Returns a list of event dicts (same shape as scrape_site output), or [].
+    """
+    api_key = os.getenv("ANTHROPIC_API_KEY", "")
+    if not api_key:
+        logger.debug("  AI extraction skipped — ANTHROPIC_API_KEY not set")
+        return []
+
+    try:
+        import anthropic
+    except ImportError:
+        logger.warning("  AI extraction skipped — 'anthropic' package not installed (pip install anthropic)")
+        return []
+
+    name = site["name"]
+    url  = site["url"]
+
+    # Strip HTML down to readable text — remove noise, cap at ~6 000 chars
+    try:
+        soup = BeautifulSoup(html_content, "html.parser")
+        for tag in soup(["script", "style", "nav", "footer", "header", "noscript", "svg", "img"]):
+            tag.decompose()
+        page_text = soup.get_text(separator="\n", strip=True)
+        page_text = re.sub(r"\n{3,}", "\n\n", page_text)  # collapse blank lines
+        page_text = page_text[:6000]
+    except Exception as e:
+        logger.warning(f"  AI extraction: could not clean HTML — {e}")
+        return []
+
+    prompt = f"""You are a data extraction assistant for a family events newsletter in Orange County, CA.
+
+Carefully read the page text below and extract every distinct upcoming event you can find.
+
+For each event return a JSON object with these fields (use null for missing fields):
+  title        — event name (string, required)
+  date         — date as YYYY-MM-DD if possible, otherwise the raw date text (string or null)
+  time         — start time, e.g. "10:00 AM" (string or null)
+  location_name — venue or place name (string or null)
+  city         — city in Orange County, CA (string, default "Orange County")
+  description  — 1-2 sentence description of the event (string)
+  url          — direct link to this event, or the page URL if no specific link (string)
+  price        — price text, e.g. "Free", "$10", "Check website" (string)
+  is_free      — true if free, false if paid, null if unknown (boolean or null)
+  categories   — relevant tags from this list: {json.dumps(tags or ["family", "kids"])} (array)
+
+Return ONLY a valid JSON array.  If you find no events, return [].
+Do not include any explanation or markdown — raw JSON only.
+
+Source: {name}
+URL: {url}
+
+Page text:
+{page_text}"""
+
+    try:
+        client   = anthropic.Anthropic(api_key=api_key)
+        response = client.messages.create(
+            model      = "claude-haiku-4-5-20251001",
+            max_tokens = 2048,
+            messages   = [{"role": "user", "content": prompt}],
+        )
+        raw = response.content[0].text.strip()
+
+        # Extract JSON array (Claude sometimes wraps in ```json ... ```)
+        match = re.search(r"\[.*\]", raw, re.DOTALL)
+        if not match:
+            logger.warning(f"  AI extraction: no JSON array in response for {name}")
+            return []
+
+        ai_events = json.loads(match.group())
+        if not isinstance(ai_events, list):
+            return []
+
+        # Normalise to the same shape as scrape_site output
+        results = []
+        for i, ev in enumerate(ai_events):
+            if not ev.get("title"):
+                continue
+            event_id = hashlib.md5(f"{ev['title']}-{name}-{ev.get('date','')}".encode()).hexdigest()[:12]
+            results.append({
+                "id":            event_id,
+                "source":        name,
+                "title":         ev.get("title", "Untitled"),
+                "description":   ev.get("description") or f"{ev.get('title','')} in {ev.get('city', 'OC')}",
+                "date":          ev.get("date") or (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d"),
+                "time":          ev.get("time") or "TBD",
+                "end_time":      "TBD",
+                "city":          ev.get("city") or "Orange County",
+                "state":         "CA",
+                "location_name": ev.get("location_name") or "See event page",
+                "url":           ev.get("url") or url,
+                "price":         ev.get("price") or "Check website",
+                "price_numeric": 0 if ev.get("is_free") else None,
+                "is_free":       ev.get("is_free"),
+                "categories":    ev.get("categories") or tags,
+                "age_range":     "All ages",
+                "scraped_at":    datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "is_mock":       False,
+                "ai_extracted":  True,
+            })
+
+        logger.info(f"  🤖 AI extracted {len(results)} events from {name}")
+        return results
+
+    except json.JSONDecodeError as e:
+        logger.warning(f"  AI extraction: JSON parse error for {name} — {e}")
+        return []
+    except Exception as e:
+        logger.warning(f"  AI extraction failed for {name}: {e}")
+        return []
+
+
 def scrape_site(site: dict, cities: list, session: requests.Session) -> list:
     """
     Generic scraper that works for any site in sites.yaml.
-    Uses flexible selectors and falls back to mock data gracefully.
+    Uses flexible selectors; falls back to AI extraction (if ANTHROPIC_API_KEY
+    is set) before falling back to mock data gracefully.
     """
     name        = site["name"]
     url         = site["url"]
@@ -280,9 +397,12 @@ def scrape_site(site: dict, cities: list, session: requests.Session) -> list:
     logger.info(f"  Scraping: {name}")
     logger.info(f"  URL: {url}")
 
+    html_content = None   # captured for AI fallback if pattern-matching fails
+
     try:
         response = session.get(url, timeout=REQUEST_TIMEOUT)
         response.raise_for_status()
+        html_content = response.text
         soup = BeautifulSoup(response.content, "html.parser")
 
         # Try multiple common patterns for event cards
@@ -388,10 +508,19 @@ def scrape_site(site: dict, cities: list, session: requests.Session) -> list:
             logger.info(f"  ✓ Scraped {len(events)} real events from {name}")
             return events
         else:
-            raise ValueError("No events found in page — site may have changed structure")
+            raise ValueError("No structured events found — trying AI extraction")
 
     except Exception as err:
-        logger.warning(f"  ✗ Scraping failed for {name}: {err}")
+        logger.warning(f"  ✗ Pattern scraping failed for {name}: {err}")
+
+        # ── AI fallback: send page text to Claude if we fetched the HTML ──
+        if html_content and os.getenv("ANTHROPIC_API_KEY"):
+            logger.info(f"  → Trying AI extraction for {name}...")
+            ai_events = ai_scrape_site(site, html_content, cities, tags)
+            if ai_events:
+                return ai_events
+            logger.info(f"  → AI found no events for {name}")
+
         logger.info(f"  → Falling back to mock data for {name}")
         return generate_mock_events(name, cities, tags, max_events)
 

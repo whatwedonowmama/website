@@ -48,13 +48,14 @@ jobs:
 
       # ── 3. Install dependencies ────────────────────────────────────────────
       - name: Install dependencies
-        run: pip install requests beautifulsoup4 pyyaml python-dotenv
+        run: pip install requests beautifulsoup4 pyyaml python-dotenv anthropic
 
       # ── 4. Run the scraper ─────────────────────────────────────────────────
       - name: Run events scraper
         env:
           SUPABASE_URL:         ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          ANTHROPIC_API_KEY:    ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           ARGS=""
           if [ "${{ github.event.inputs.site }}" != "" ]; then
