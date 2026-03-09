@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
   // ── Success ──
   // For plain HTML form POSTs, redirect back with ?subscribed=1
   // For JSON / fetch callers, return JSON
-  return redirectOrJson(req, { ok: true }, 200, '/?subscribed=1')
+  return redirectOrJson(req, { ok: true }, 200, '/subscribed')
 }
 
 // ── Helper: return JSON for fetch, redirect for plain form POST ──
