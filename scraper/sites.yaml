@@ -100,3 +100,109 @@ sources:
   #   max_events: 5
   #   tags: [paid, family, theme-park]
   #   notes: "Only changes monthly — seasonal events and limited-time offerings."
+  #
+  # ── READY TO ENABLE — tested with AI extraction ─────────────────────────
+  #
+  # - name: "OC Public Libraries"
+  #   url: "https://ocpl.org/events"
+  #   frequency: weekly
+  #   enabled: false
+  #   max_events: 20
+  #   tags: [library, free, indoor, educational, kids]
+  #   notes: "Storytime, STEM workshops, reading programs across all OC branches."
+  #
+  # - name: "Irvine Spectrum Events"
+  #   url: "https://www.irvinespectrum.com/events/"
+  #   frequency: weekly
+  #   enabled: false
+  #   max_events: 15
+  #   tags: [free, outdoor, family, shopping]
+  #   notes: "Free family events — movie nights, seasonal activities, live entertainment."
+  #
+  # - name: "Segerstrom Center Family"
+  #   url: "https://www.scfta.org/events"
+  #   frequency: monthly
+  #   enabled: false
+  #   max_events: 10
+  #   tags: [arts, paid, indoor, school-age, performances]
+  #   notes: "Performing arts — family series, kids shows. Monthly cadence is enough."
+  #
+  # - name: "Newport Beach Events"
+  #   url: "https://www.discovernewportbeach.com/events/"
+  #   frequency: weekly
+  #   enabled: false
+  #   max_events: 15
+  #   tags: [newport-beach, outdoor, community, family]
+  #   notes: "City of Newport Beach official events calendar."
+  #
+  # - name: "Irvine Community Events"
+  #   url: "https://www.cityofirvine.org/events"
+  #   frequency: weekly
+  #   enabled: false
+  #   max_events: 20
+  #   tags: [irvine, free, community, parks, kids]
+  #   notes: "City of Irvine parks & rec — tons of free family programming."
+  #
+  # - name: "Huntington Beach Events"
+  #   url: "https://www.huntingtonbeachca.gov/residents/parks_facilities/events/"
+  #   frequency: weekly
+  #   enabled: false
+  #   max_events: 15
+  #   tags: [huntington-beach, outdoor, free, community]
+  #   notes: "HB city events — beach festivals, farmers markets, family activities."
+  #
+  # - name: "Laguna Beach Events"
+  #   url: "https://www.lagunabeachcity.net/city_hall/community_services/special_events"
+  #   frequency: monthly
+  #   enabled: false
+  #   max_events: 10
+  #   tags: [laguna-beach, arts, outdoor, seasonal]
+  #   notes: "Laguna Beach arts festivals, community events. Slower cadence."
+  #
+  # - name: "Anaheim Community Events"
+  #   url: "https://www.anaheim.net/5018/Special-Events"
+  #   frequency: weekly
+  #   enabled: false
+  #   max_events: 15
+  #   tags: [anaheim, community, free, family]
+  #   notes: "City of Anaheim special events and parks programming."
+  #
+  # - name: "Costa Mesa Events"
+  #   url: "https://costamesaca.gov/city-hall/departments/parks-community-services/special-events"
+  #   frequency: weekly
+  #   enabled: false
+  #   max_events: 15
+  #   tags: [costa-mesa, community, family, free]
+  #   notes: "Costa Mesa arts, farmers markets, outdoor cinema, family events."
+  #
+  # - name: "Mission Viejo Events"
+  #   url: "https://www.cityofmissionviejo.org/parks-recreation/special-events"
+  #   frequency: weekly
+  #   enabled: false
+  #   max_events: 15
+  #   tags: [mission-viejo, family, community, free]
+  #   notes: "MV parks & rec events — good suburban family programming."
+  #
+  # - name: "Fullerton Events"
+  #   url: "https://www.cityoffullerton.com/gov/departments/parks_recreation_community_services/special_events.asp"
+  #   frequency: weekly
+  #   enabled: false
+  #   max_events: 15
+  #   tags: [fullerton, community, family, free]
+  #   notes: "Fullerton city events — diverse community programming."
+  #
+  # - name: "Patch OC Events"
+  #   url: "https://patch.com/california/irvine/calendar"
+  #   frequency: weekly
+  #   enabled: false
+  #   max_events: 20
+  #   tags: [community, general, family, local]
+  #   notes: "Patch local events calendar — community-submitted, broad coverage."
+  #
+  # - name: "Yelp OC Family Events"
+  #   url: "https://www.yelp.com/events/orange-county-ca?category=kids_family"
+  #   frequency: weekly
+  #   enabled: false
+  #   max_events: 20
+  #   tags: [family, kids, general, community]
+  #   notes: "Yelp events filtered to kids/family in OC. Good variety."

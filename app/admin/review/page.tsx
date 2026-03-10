@@ -6,6 +6,79 @@ import type { PendingContent } from '@/lib/types'
 
 type Filter = 'all' | 'event' | 'resource'
 
+// ── Quick Add from URL ────────────────────────────────────────────────────────
+function QuickAddUrl({ onAdded }: { onAdded: () => void }) {
+  const [url, setUrl]         = useState('')
+  const [status, setStatus]   = useState<'idle' | 'loading' | 'ok' | 'err'>('idle')
+  const [errMsg, setErrMsg]   = useState('')
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const trimmed = url.trim()
+    if (!trimmed) return
+    setStatus('loading')
+    setErrMsg('')
+    try {
+      const res  = await fetch('/api/admin/scrape-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: trimmed }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setErrMsg(data.error ?? `Error ${res.status}`)
+        setStatus('err')
+        return
+      }
+      setStatus('ok')
+      setUrl('')
+      setTimeout(() => {
+        setStatus('idle')
+        onAdded()   // reload the queue
+      }, 1800)
+    } catch {
+      setErrMsg('Network error — please try again')
+      setStatus('err')
+    }
+  }
+
+  return (
+    <div className="mb-8 bg-white border border-gray-100 rounded-3xl p-5 shadow-sm">
+      <p className="text-xs font-semibold text-brand-purple uppercase tracking-wider mb-3">
+        ⚡ Quick Add from URL
+      </p>
+      <p className="text-sm text-gray-500 mb-4">
+        Paste any event link — Claude will extract the details and drop it into the review queue.
+      </p>
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3">
+        <input
+          type="url"
+          value={url}
+          onChange={e => { setUrl(e.target.value); setStatus('idle'); setErrMsg('') }}
+          placeholder="https://www.eventbrite.com/e/…"
+          required
+          disabled={status === 'loading'}
+          className="flex-1 rounded-2xl px-4 py-2.5 text-sm border border-gray-200 focus:outline-none focus:border-brand-purple transition-colors disabled:opacity-50"
+        />
+        <button
+          type="submit"
+          disabled={status === 'loading' || !url.trim()}
+          className={`px-5 py-2.5 rounded-2xl text-sm font-semibold whitespace-nowrap transition-all disabled:opacity-40 ${
+            status === 'ok'
+              ? 'bg-green-500 text-white scale-95'
+              : 'bg-brand-purple text-white hover:bg-brand-purple/90'
+          }`}
+        >
+          {status === 'loading' ? '⏳ Extracting…' : status === 'ok' ? '✓ Added!' : 'Extract event →'}
+        </button>
+      </form>
+      {status === 'err' && (
+        <p className="mt-2 text-xs text-red-600">{errMsg}</p>
+      )}
+    </div>
+  )
+}
+
 export default function ReviewPage() {
   const [items, setItems]         = useState<PendingContent[]>([])
   const [filter, setFilter]       = useState<Filter>('all')
@@ -86,6 +159,9 @@ export default function ReviewPage() {
         Approve to publish live, edit to tweak first, or skip to discard.
         Approved events drop into the email draft below.
       </p>
+
+      {/* Quick Add from URL */}
+      <QuickAddUrl onAdded={load} />
 
       {/* Filter tabs */}
       <div className="flex gap-2 mb-6">
