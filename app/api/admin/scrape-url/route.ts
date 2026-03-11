@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
 
 // ── auth helper ──────────────────────────────────────────────────────────────
 async function getAdminOrFail() {
@@ -80,8 +79,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured' }, { status: 500 })
   }
 
-  const anthropic = new Anthropic({ apiKey })
-
   const prompt = `You are an event data extractor for a family events website covering Orange County, CA.
 
 From the page text below, extract the event details and return ONLY a valid JSON object.
@@ -104,12 +101,25 @@ ${pageText}`
 
   let extracted: Record<string, unknown>
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 512,
-      messages: [{ role: 'user', content: prompt }],
+    const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key':         apiKey,
+        'anthropic-version': '2023-06-01',
+        'content-type':      'application/json',
+      },
+      body: JSON.stringify({
+        model:      'claude-haiku-4-5-20251001',
+        max_tokens: 512,
+        messages:   [{ role: 'user', content: prompt }],
+      }),
     })
-    const raw = (message.content[0] as { type: string; text: string }).text.trim()
+    if (!aiRes.ok) {
+      const errText = await aiRes.text()
+      return NextResponse.json({ error: `Anthropic API error: ${errText}` }, { status: 500 })
+    }
+    const aiData = await aiRes.json()
+    const raw    = (aiData.content?.[0]?.text ?? '').trim()
     // Strip markdown code fences if present
     const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/```\s*$/, '').trim()
     extracted = JSON.parse(jsonStr)
