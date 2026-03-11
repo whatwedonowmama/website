@@ -10,6 +10,15 @@ const CATEGORY_LABEL: Record<string, string> = {
   community: 'Community',
 }
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  outdoor:   '🌳',
+  museum:    '🏛️',
+  market:    '🛍️',
+  arts:      '🎨',
+  sports:    '⚽',
+  community: '👋',
+}
+
 function formatEventDate(dateStr: string): string {
   try {
     const d = new Date(dateStr + 'T12:00:00')
@@ -29,13 +38,18 @@ type Props = {
 
 export default function EventListItem({ event }: Props) {
   const formattedDate = formatEventDate(event.date)
+  const categoryLabel = CATEGORY_LABEL[event.category] ?? event.category
+  const categoryEmoji = CATEGORY_EMOJI[event.category] ?? '📅'
+
+  // Tags to display: skip the category tag since we show it separately, keep the rest
+  const displayTags = (event.tags ?? []).filter(t => t !== event.category).slice(0, 3)
 
   return (
     <Link
       href={`/events/${event.slug}`}
       className="group flex gap-4 md:gap-6 bg-white rounded-3xl border border-gray-100 hover:border-brand-purple/30 shadow-sm hover:shadow-md transition-all overflow-hidden p-4 md:p-5"
     >
-      {/* ── Feature image ── */}
+      {/* ── Feature image placeholder ── */}
       <div className="flex-shrink-0 w-28 h-28 md:w-36 md:h-36 rounded-2xl overflow-hidden">
         <div className={`w-full h-full bg-gradient-to-br ${event.placeholderGradient} flex items-center justify-center`}>
           <span className="text-4xl md:text-5xl select-none">{event.placeholderEmoji}</span>
@@ -43,11 +57,14 @@ export default function EventListItem({ event }: Props) {
       </div>
 
       {/* ── Content ── */}
-      <div className="flex-1 flex flex-col gap-2 min-w-0">
+      <div className="flex-1 flex flex-col gap-1.5 min-w-0">
 
-        {/* Top row: category label + price badge */}
+        {/* Top row: category badge + price */}
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <span className="section-label">{CATEGORY_LABEL[event.category] ?? event.category}</span>
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-brand-purple uppercase tracking-wider">
+            <span>{categoryEmoji}</span>
+            {categoryLabel}
+          </span>
           <span className={event.is_free
             ? 'badge-free'
             : 'inline-block px-2 py-0.5 rounded-full text-xs font-semibold bg-brand-gold/20 text-brand-navy'
@@ -74,10 +91,24 @@ export default function EventListItem({ event }: Props) {
           </span>
         </div>
 
-        {/* Description — 2-line clamp */}
+        {/* Description */}
         <p className="text-gray-500 text-sm leading-relaxed line-clamp-2">
           {event.description}
         </p>
+
+        {/* Tags */}
+        {displayTags.length > 0 && (
+          <div className="flex gap-1.5 flex-wrap">
+            {displayTags.map(tag => (
+              <span
+                key={tag}
+                className="text-xs bg-brand-lavender text-brand-purple px-2 py-0.5 rounded-full font-medium capitalize"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* CTA */}
         <span className="text-xs font-semibold text-brand-purple mt-auto group-hover:underline">
