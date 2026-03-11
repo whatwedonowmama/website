@@ -94,6 +94,53 @@ def load_config() -> dict:
     return config
 
 
+def push_source_stats_to_db(run_stats: dict) -> None:
+    """
+    After a scrape run, update each source in Supabase scrape_sources with:
+      - last_scraped_at  (timestamp of this run)
+      - last_events_count (how many real events were found)
+
+    Matches rows by name (case-insensitive). Silently skips if env vars
+    aren't set or the source name isn't found in the DB.
+    """
+    url = os.getenv("SUPABASE_URL", "").rstrip("/")
+    key = os.getenv("SUPABASE_SERVICE_KEY", "")
+    if not url or not key:
+        return
+
+    headers = {
+        "apikey":        key,
+        "Authorization": f"Bearer {key}",
+        "Content-Type":  "application/json",
+        "Prefer":        "return=minimal",
+    }
+
+    now_ts = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    for name, info in run_stats.items():
+        if info.get("status") == "skipped":
+            continue  # don't overwrite last_scraped_at for skipped sources
+
+        count = info.get("count", 0)
+        try:
+            resp = requests.patch(
+                f"{url}/rest/v1/scrape_sources",
+                headers=headers,
+                params={"name": f"eq.{name}"},
+                json={
+                    "last_scraped_at":    now_ts,
+                    "last_events_count":  count,
+                },
+                timeout=10,
+            )
+            if resp.ok:
+                logger.info(f"  ↑ Updated DB stats for '{name}': {count} events, ran at {now_ts[:16]}")
+            else:
+                logger.debug(f"  DB stats update failed for '{name}': {resp.status_code} {resp.text[:100]}")
+        except Exception as e:
+            logger.debug(f"  DB stats update error for '{name}': {e}")
+
+
 def load_db_sources() -> list:
     """
     Load additional scrape sources from the Supabase scrape_sources table.
@@ -768,6 +815,10 @@ def main():
 
     # Normal run
     events, run_stats = run_pipeline(config, state, sites_to_run, force=force)
+
+    # Push per-source stats back to Supabase (last_scraped_at + last_events_count)
+    # so the admin Sources page shows live "last ran" and "events found" per source.
+    push_source_stats_to_db(run_stats)
 
     if not events:
         logger.warning("No events collected this run.")
