@@ -192,75 +192,7 @@ def update_state(state: dict, site_name: str, event_count: int) -> None:
     }
 
 
-# ============================================================================
-# MOCK DATA FALLBACK
-# ============================================================================
-
-def generate_mock_events(source_name: str, cities: list, tags: list, count: int = 10) -> list:
-    """
-    Generate realistic mock events when a site blocks scraping.
-    Uses cities from sites.yaml so mock data is always OC-relevant.
-    """
-    event_templates = [
-        ("Toddler Storytime & Sing-Along",      ["toddler-friendly", "indoor", "free"],       "0-3 years"),
-        ("Family Yoga in the Park",              ["outdoor", "all-ages", "free"],              "All ages"),
-        ("Kids Art Workshop: Spring Paintings",  ["indoor", "school-age"],                     "3-12 years"),
-        ("Outdoor Movie Night: Family Classics", ["outdoor", "family", "free"],                "All ages"),
-        ("Farmers Market Family Day",            ["outdoor", "educational", "free"],           "All ages"),
-        ("Music & Movement for Toddlers",        ["toddler-friendly", "indoor"],               "0-3 years"),
-        ("Kids Cooking Class: Pizza Making",     ["educational", "school-age"],                "4-10 years"),
-        ("Family Nature Walk & Bird Watching",   ["outdoor", "educational", "free"],           "All ages"),
-        ("STEM Workshop: Build Your Own Robot",  ["educational", "school-age", "indoor"],      "6-14 years"),
-        ("Baby & Me: Music & Movement",          ["toddler-friendly", "indoor", "free"],       "0-2 years"),
-        ("Crystal Cove Tide Pool Family Walk",   ["outdoor", "educational", "free"],           "All ages"),
-        ("Irvine Spectrum Family Movie Night",   ["outdoor", "family", "free"],                "All ages"),
-        ("OC Farmers Market Family Day",         ["outdoor", "family", "toddler-friendly"],    "All ages"),
-        ("Huntington Beach Surf Lessons",        ["outdoor", "school-age"],                    "6-14 years"),
-        ("Community Park Picnic & Games",        ["outdoor", "family", "free"],                "All ages"),
-    ]
-    prices_options = [
-        ("Free", 0), ("Free", 0), ("Free", 0),
-        ("$5 per child", 5), ("$10 per family", 10),
-        ("$15 per person", 15), ("$3-8 per ticket", 5),
-    ]
-
-    events = []
-    base_date = datetime.now()
-    oc_cities = cities if cities else ["Irvine", "Newport Beach", "Huntington Beach"]
-
-    for i in range(count):
-        city = random.choice(oc_cities)
-        title, categories, age_range = random.choice(event_templates)
-        days_ahead = random.randint(1, 60)
-        event_date = base_date + timedelta(days=days_ahead)
-        hour = random.choice([9, 10, 11, 14, 15, 16, 18])
-        start_time = f"{hour}:00 AM" if hour < 12 else f"{hour - 12 or 12}:00 PM"
-        price_str, price_num = random.choice(prices_options)
-        unique_str = f"{title}-{city}-{event_date.date()}-{source_name}".lower()
-        event_id = hashlib.md5(unique_str.encode()).hexdigest()[:12]
-        events.append({
-            "id": event_id,
-            "source": source_name,
-            "title": title,
-            "description": f"Join us for {title.lower()} in {city}. Perfect for families.",
-            "date": event_date.strftime("%Y-%m-%d"),
-            "time": start_time,
-            "end_time": "TBD",
-            "city": city,
-            "state": "CA",
-            "location_name": f"{city} Community Center",
-            "url": f"https://example.com/events/{event_id}",
-            "price": price_str,
-            "price_numeric": price_num,
-            "is_free": price_num == 0,
-            "categories": list(set(categories + tags)),
-            "age_range": age_range,
-            "scraped_at": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "is_mock": True,
-        })
-
-    logger.info(f"  Generated {count} mock events for {source_name}")
-    return events
+# Mock fallback removed — if a site fails, we skip it rather than inserting fake data.
 
 
 # ============================================================================
@@ -269,10 +201,15 @@ def generate_mock_events(source_name: str, cities: list, tags: list, count: int 
 
 def ai_scrape_site(site: dict, html_content: str, cities: list, tags: list) -> list:
     """
-    Use Claude (claude-haiku) to extract events from unstructured HTML.
+    Use Claude (claude-haiku) to extract family-relevant events from unstructured HTML.
     Called automatically when the HTML pattern-matcher finds no events.
     Requires ANTHROPIC_API_KEY environment variable.
-    Returns a list of event dicts (same shape as scrape_site output), or [].
+
+    Improvements over v1:
+    - Extracts all page links BEFORE stripping HTML, passes them to Claude so it
+      can return specific event-detail URLs instead of just the source page URL.
+    - Strict family/kids filter: skips adult-only, corporate, fundraising events.
+    - Returns [] on failure — never falls back to mock data.
     """
     api_key = os.getenv("ANTHROPIC_API_KEY", "")
     if not api_key:
@@ -288,40 +225,73 @@ def ai_scrape_site(site: dict, html_content: str, cities: list, tags: list) -> l
     name = site["name"]
     url  = site["url"]
 
-    # Strip HTML down to readable text — remove noise, cap at ~6 000 chars
+    # ── Step 1: extract all links BEFORE stripping HTML ──────────────────────
+    # We pass these to Claude so it can find specific event-detail page URLs
+    # instead of always returning the source listing page URL.
+    links_section = ""
+    try:
+        soup_links = BeautifulSoup(html_content, "html.parser")
+        seen_link_urls = set()
+        unique_links   = []
+        for a in soup_links.find_all("a", href=True):
+            href = a["href"].strip()
+            text = a.get_text(strip=True)
+            if not href or not text or len(text) < 3 or len(text) > 120:
+                continue
+            abs_url = urljoin(url, href)
+            if not abs_url.startswith("http") or abs_url in seen_link_urls:
+                continue
+            seen_link_urls.add(abs_url)
+            unique_links.append((text, abs_url))
+        if unique_links:
+            links_section = "\n\nLINKS ON THIS PAGE (use the best matching link for each event\'s url field):\n"
+            for link_text, link_url in unique_links[:100]:
+                links_section += f"  {link_text} → {link_url}\n"
+    except Exception as link_err:
+        logger.debug(f"  Link extraction error: {link_err}")
+
+    # ── Step 2: strip HTML to readable text ──────────────────────────────────
     try:
         soup = BeautifulSoup(html_content, "html.parser")
         for tag in soup(["script", "style", "nav", "footer", "header", "noscript", "svg", "img"]):
             tag.decompose()
         page_text = soup.get_text(separator="\n", strip=True)
-        page_text = re.sub(r"\n{3,}", "\n\n", page_text)  # collapse blank lines
-        page_text = page_text[:6000]
+        page_text = re.sub(r"\n{3,}", "\n\n", page_text)
+        page_text = page_text[:5000]
     except Exception as e:
         logger.warning(f"  AI extraction: could not clean HTML — {e}")
         return []
 
+    # ── Step 3: build prompt with family filter + links ───────────────────────
     prompt = f"""You are a data extraction assistant for a family events newsletter in Orange County, CA.
 
-Carefully read the page text below and extract every distinct upcoming event you can find.
+AUDIENCE FILTER — CRITICAL:
+Only extract events that are relevant to FAMILIES WITH CHILDREN (ages 0-14).
+INCLUDE: kids activities, children\'s programs, family-friendly outings, parent-child classes,
+  toddler storytime, family festivals, youth sports, family nature walks, free community events.
+SKIP entirely: adult-only events, corporate events, business conferences, fundraising galas,
+  sponsorship opportunities, generic page sections with no specific event, recurring classes
+  with no upcoming date, or anything not specifically relevant to families with kids.
 
-For each event return a JSON object with these fields (use null for missing fields):
-  title        — event name (string, required)
-  date         — date as YYYY-MM-DD if possible, otherwise the raw date text (string or null)
-  time         — start time, e.g. "10:00 AM" (string or null)
+For each qualifying event return a JSON object with these exact fields (null for missing):
+  title         — event name (string, required)
+  date          — YYYY-MM-DD preferred; raw date text if format unclear (string or null)
+  time          — start time e.g. "10:00 AM" (string or null)
   location_name — venue or place name (string or null)
-  city         — city in Orange County, CA (string, default "Orange County")
-  description  — 1-2 sentence description of the event (string)
-  url          — direct link to this event, or the page URL if no specific link (string)
-  price        — price text, e.g. "Free", "$10", "Check website" (string)
-  is_free      — true if free, false if paid, null if unknown (boolean or null)
-  categories   — relevant tags from this list: {json.dumps(tags or ["family", "kids"])} (array)
+  city          — city in Orange County CA (string, default "Orange County")
+  description   — 1-2 sentences, family-friendly tone (string)
+  url           — SPECIFIC event detail page URL from the LINKS section below if available,
+                  otherwise the source page URL. Do NOT use placeholder or example.com URLs.
+  price         — e.g. "Free", "$10/child", "Check website" (string)
+  is_free       — true/false/null (boolean or null)
+  categories    — relevant tags from: {json.dumps(tags or ["family", "kids"])} (array)
 
-Return ONLY a valid JSON array.  If you find no events, return [].
-Do not include any explanation or markdown — raw JSON only.
+Return ONLY a valid JSON array. If you find no qualifying family events, return [].
+No markdown, no explanation — raw JSON only.
 
 Source: {name}
-URL: {url}
-
+Source URL: {url}
+{links_section}
 Page text:
 {page_text}"""
 
@@ -346,9 +316,14 @@ Page text:
 
         # Normalise to the same shape as scrape_site output
         results = []
-        for i, ev in enumerate(ai_events):
+        for ev in ai_events:
             if not ev.get("title"):
                 continue
+            # Skip events with placeholder/example URLs that slipped through
+            ev_url = ev.get("url") or url
+            if "example.com" in ev_url:
+                ev_url = url
+
             event_id = hashlib.md5(f"{ev['title']}-{name}-{ev.get('date','')}".encode()).hexdigest()[:12]
             results.append({
                 "id":            event_id,
@@ -361,7 +336,7 @@ Page text:
                 "city":          ev.get("city") or "Orange County",
                 "state":         "CA",
                 "location_name": ev.get("location_name") or "See event page",
-                "url":           ev.get("url") or url,
+                "url":           ev_url,
                 "price":         ev.get("price") or "Check website",
                 "price_numeric": 0 if ev.get("is_free") else None,
                 "is_free":       ev.get("is_free"),
@@ -372,7 +347,7 @@ Page text:
                 "ai_extracted":  True,
             })
 
-        logger.info(f"  🤖 AI extracted {len(results)} events from {name}")
+        logger.info(f"  🤖 AI extracted {len(results)} family events from {name}")
         return results
 
     except json.JSONDecodeError as e:
@@ -387,7 +362,7 @@ def scrape_site(site: dict, cities: list, session: requests.Session) -> list:
     """
     Generic scraper that works for any site in sites.yaml.
     Uses flexible selectors; falls back to AI extraction (if ANTHROPIC_API_KEY
-    is set) before falling back to mock data gracefully.
+    is set). Returns [] if neither finds anything — no mock data ever.
     """
     name        = site["name"]
     url         = site["url"]
@@ -525,8 +500,8 @@ def scrape_site(site: dict, cities: list, session: requests.Session) -> list:
                 return ai_events
             logger.info(f"  → AI found no events for {name}")
 
-        logger.info(f"  → Falling back to mock data for {name}")
-        return generate_mock_events(name, cities, tags, max_events)
+        logger.warning(f"  → No events found for {name} — skipping (both pattern matching and AI found nothing)")
+        return []
 
 
 # ============================================================================
