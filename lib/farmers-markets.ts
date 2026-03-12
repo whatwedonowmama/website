@@ -34,7 +34,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   // ── SUNDAY ────────────────────────────────────────────────────────────────
 
   {
-    slug:            'garden-grove-farmers-market',
+    slug:            'garden-grove',
     name:            'Garden Grove Farmers Market',
     city:            'Garden Grove',
     location:        'Historic Main Street',
@@ -49,7 +49,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'irvine-great-park-farmers-market',
+    slug:            'irvine-great-park',
     name:            'Irvine Great Park Farmers Market',
     city:            'Irvine',
     location:        'The Great Park',
@@ -65,7 +65,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'ladera-ranch-farm-craft-market',
+    slug:            'ladera-ranch',
     name:            'Ladera Ranch Farm & Craft Market',
     city:            'Ladera Ranch',
     location:        'Founders Park & Avendale Clubhouse',
@@ -81,7 +81,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'laguna-niguel-farmers-market',
+    slug:            'laguna-niguel',
     name:            'Laguna Niguel Certified Farmers Market',
     city:            'Laguna Niguel',
     location:        'Plaza de Paz Shopping Center',
@@ -97,7 +97,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'newport-beach-pier-farmers-market',
+    slug:            'newport-beach-pier',
     name:            'Newport Beach Pier Farmers Market',
     city:            'Newport Beach',
     location:        'Newport Beach Pier',
@@ -112,7 +112,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'san-clemente-farmers-market',
+    slug:            'san-clemente',
     name:            'San Clemente Certified Farmers Market',
     city:            'San Clemente',
     location:        '200 Block Avenida Del Mar',
@@ -128,7 +128,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'tustin-farm-craft-market-sunday',
+    slug:            'tustin-sunday',
     name:            'Tustin Farm & Craft Market',
     city:            'Tustin',
     location:        '2411 Park Avenue',
@@ -161,7 +161,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'orange-irvine-regional-park-farmers-market',
+    slug:            'orange-irvine-regional-park',
     name:            'Irvine Regional Park Farmers Market',
     city:            'Orange',
     location:        'Irvine Regional Park',
@@ -177,7 +177,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'placentia-farmers-market',
+    slug:            'placentia',
     name:            'Placentia Farmers Market',
     city:            'Placentia',
     location:        'Placentia Town Center',
@@ -192,7 +192,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'seal-beach-farmers-market',
+    slug:            'seal-beach',
     name:            'Seal Beach Farmers Market',
     city:            'Seal Beach',
     location:        'Seal Beach Village',
@@ -208,7 +208,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   // ── WEDNESDAY ─────────────────────────────────────────────────────────────
 
   {
-    slug:            'dana-point-farm-craft-market-wednesday',
+    slug:            'dana-point-wednesday',
     name:            'Dana Point Farm & Craft Market',
     city:            'Dana Point',
     location:        '34555 Golden Lantern St.',
@@ -224,7 +224,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'fullerton-farmers-market-wednesday',
+    slug:            'fullerton-wednesday',
     name:            'Fullerton Certified Farmers Market',
     city:            'Fullerton',
     location:        'Independence Park',
@@ -239,7 +239,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'irvine-kaiser-farmers-market',
+    slug:            'irvine-kaiser',
     name:            'Irvine Kaiser Permanente Farmers Market',
     city:            'Irvine',
     location:        'Kaiser Permanente Medical Offices',
@@ -255,7 +255,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'tustin-farmers-market-wednesday',
+    slug:            'tustin-wednesday',
     name:            'Tustin Certified Farmers Market',
     city:            'Tustin',
     location:        'Corner of El Camino Real & 3rd Street',
@@ -273,7 +273,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   // ── THURSDAY ──────────────────────────────────────────────────────────────
 
   {
-    slug:            'anaheim-center-st-farmers-market',
+    slug:            'anaheim-center-st',
     name:            'Anaheim Center Street Farmers Market',
     city:            'Anaheim',
     location:        'Center St. Promenade & Lemon St.',
@@ -288,7 +288,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'brea-farmers-market',
+    slug:            'brea',
     name:            'Brea Certified Farmers Market',
     city:            'Brea',
     location:        'Brea Place Parking Lot',
@@ -304,7 +304,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'costa-mesa-fairgrounds-farmers-market',
+    slug:            'costa-mesa-fairgrounds',
     name:            'Costa Mesa Certified Farmers Market',
     city:            'Costa Mesa',
     location:        'OC Fairgrounds',
@@ -320,7 +320,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'fullerton-downtown-farmers-market',
+    slug:            'fullerton-downtown',
     name:            'Fullerton Downtown Farmers Market',
     city:            'Fullerton',
     location:        'Downtown Plaza',
@@ -338,7 +338,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   // ── FRIDAY ────────────────────────────────────────────────────────────────
 
   {
-    slug:            'anaheim-kaiser-farmers-market',
+    slug:            'anaheim-kaiser',
     name:            'Anaheim Kaiser Permanente Farmers Market',
     city:            'Anaheim',
     location:        '3440 E. La Palma Ave',
@@ -354,7 +354,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'laguna-hills-farmers-market',
+    slug:            'laguna-hills',
     name:            'Laguna Hills Certified Farmers Market',
     city:            'Laguna Hills',
     location:        'Laguna Hills Mall Parking Lot',
@@ -387,7 +387,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   // ── SATURDAY ──────────────────────────────────────────────────────────────
 
   {
-    slug:            'buena-park-farmers-market',
+    slug:            'buena-park',
     name:            'Buena Park Farmers Market',
     city:            'Buena Park',
     location:        'Corner of La Palma & Stanton',
@@ -402,7 +402,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'corona-del-mar-farm-craft-market',
+    slug:            'corona-del-mar-farm-craft',
     name:            'Corona del Mar Farm & Craft Market',
     city:            'Corona del Mar',
     location:        '3201 E. Pacific Coast Hwy',
@@ -418,7 +418,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'corona-del-mar-certified-farmers-market',
+    slug:            'corona-del-mar-certified',
     name:            'Corona del Mar Certified Farmers Market',
     city:            'Corona del Mar',
     location:        'Marguerite & Pacific Coast Hwy',
@@ -434,7 +434,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'costa-mesa-soco-farmers-market',
+    slug:            'costa-mesa-soco',
     name:            'Costa Mesa SoCo Farmers Market',
     city:            'Costa Mesa',
     location:        'SoCo Collection',
@@ -449,7 +449,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'cypress-farmers-market',
+    slug:            'cypress',
     name:            'Cypress Farmers Market',
     city:            'Cypress',
     location:        'Cottonwood Church Parking Lot',
@@ -464,7 +464,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'dana-point-farmers-market-saturday',
+    slug:            'dana-point-saturday',
     name:            'Dana Point Saturday Farmers Market',
     city:            'Dana Point',
     location:        'La Plaza Park',
@@ -480,7 +480,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'irvine-mariners-farmers-market',
+    slug:            'irvine-mariners',
     name:            'Irvine Certified Farmers Market',
     city:            'Irvine',
     location:        "Mariners Church Parking Lot",
@@ -496,7 +496,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'laguna-beach-farmers-market',
+    slug:            'laguna-beach',
     name:            'Laguna Beach Certified Farmers Market',
     city:            'Laguna Beach',
     location:        '521 Forest Ave',
@@ -512,7 +512,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'mission-viejo-farm-craft-market',
+    slug:            'mission-viejo',
     name:            'Mission Viejo Farm & Craft Market',
     city:            'Mission Viejo',
     location:        '25282 Marguerite Pkwy',
@@ -528,7 +528,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'orange-home-grown-farmers-market',
+    slug:            'orange-home-grown',
     name:            'Orange Home Grown Farmers & Artisans Market',
     city:            'Orange',
     location:        'Old Towne Orange',
@@ -543,7 +543,7 @@ export const FARMERS_MARKETS: FarmersMarket[] = [
   },
 
   {
-    slug:            'yorba-linda-farm-craft-market',
+    slug:            'yorba-linda',
     name:            'Yorba Linda Farm & Craft Market',
     city:            'Yorba Linda',
     location:        'Yorba Linda Friends Church',
