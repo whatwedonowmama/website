@@ -16,6 +16,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li><Link href="/events" className="hover:text-brand-coral transition-colors">This Week in OC</Link></li>
               <li><Link href="/resources" className="hover:text-brand-coral transition-colors">Resources</Link></li>
+              <li><Link href="/orange-county-farmers-market" className="hover:text-brand-coral transition-colors">OC Farmers Markets</Link></li>
               <li><Link href="/members/community" className="hover:text-brand-coral transition-colors">Community</Link></li>
               <li><Link href="/about" className="hover:text-brand-coral transition-colors">Our Story</Link></li>
             </ul>
