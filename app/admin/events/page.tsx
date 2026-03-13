@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 
 interface Event {
@@ -21,12 +21,28 @@ interface Event {
 function formatDate(d: string) {
   try {
     return new Date(d + 'T12:00:00').toLocaleDateString('en-US', {
-      month: 'short', day: 'numeric', year: 'numeric',
+      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
     })
   } catch { return d }
 }
 
-// ── Format an event as email-ready copy ──────────────────────────────────────
+function monthLabel(d: string) {
+  try {
+    return new Date(d + 'T12:00:00').toLocaleDateString('en-US', {
+      month: 'long', year: 'numeric',
+    })
+  } catch { return d.slice(0, 7) }
+}
+
+function monthKey(d: string) {
+  return d.slice(0, 7) // YYYY-MM
+}
+
+function isPast(d: string) {
+  return new Date(d + 'T23:59:59') < new Date()
+}
+
+// ── Format event as email-ready copy ─────────────────────────────────────────
 function formatForEmail(event: Event): string {
   const lines: string[] = []
   lines.push(`📅 ${event.title}`)
@@ -56,10 +72,7 @@ function EmailDraftPanel({
   const [copied, setCopied] = useState(false)
   const [text, setText]     = useState(draft.join('\n\n---\n\n'))
 
-  // Keep textarea in sync when entries are added/removed
-  useEffect(() => {
-    setText(draft.join('\n\n---\n\n'))
-  }, [draft])
+  useEffect(() => { setText(draft.join('\n\n---\n\n')) }, [draft])
 
   function copyAll() {
     navigator.clipboard.writeText(text).then(() => {
@@ -83,9 +96,7 @@ function EmailDraftPanel({
           <button
             onClick={copyAll}
             className={`text-sm px-4 py-2 rounded-xl font-semibold transition-all ${
-              copied
-                ? 'bg-green-500 text-white scale-95'
-                : 'bg-brand-purple text-white hover:bg-brand-purple/90'
+              copied ? 'bg-green-500 text-white scale-95' : 'bg-brand-purple text-white hover:bg-brand-purple/90'
             }`}
           >
             {copied ? '✓ Copied!' : '📋 Copy all'}
@@ -99,7 +110,6 @@ function EmailDraftPanel({
         </div>
       </div>
 
-      {/* Individual entry cards */}
       <div className="flex flex-col gap-2 mb-5">
         {draft.map((entry, i) => (
           <div key={i} className="bg-white border border-gray-100 rounded-2xl p-4 relative group shadow-sm">
@@ -108,7 +118,7 @@ function EmailDraftPanel({
             </pre>
             <button
               onClick={() => onRemove(i)}
-              className="absolute top-3 right-3 text-gray-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity text-sm leading-none"
+              className="absolute top-3 right-3 text-gray-300 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity text-sm"
               title="Remove from draft"
             >
               ✕
@@ -117,7 +127,6 @@ function EmailDraftPanel({
         ))}
       </div>
 
-      {/* Editable combined textarea */}
       <div className="bg-brand-cream border border-brand-gold/30 rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-brand-gold/20">
           <span className="text-xs font-medium text-brand-navy/60">Editable draft — tweak before you copy</span>
@@ -140,12 +149,19 @@ function EmailDraftPanel({
   )
 }
 
+// ── Main page ─────────────────────────────────────────────────────────────────
 export default function AdminEventsPage() {
   const [events, setEvents]         = useState<Event[]>([])
   const [loading, setLoading]       = useState(true)
   const [saving, setSaving]         = useState<string | null>(null)
   const [emailDraft, setEmailDraft] = useState<string[]>([])
   const [justAdded, setJustAdded]   = useState<string | null>(null)
+
+  // ── Filters / sort ──
+  const [search,     setSearch]     = useState('')
+  const [cityFilter, setCityFilter] = useState('all')
+  const [sortDir,    setSortDir]    = useState<'asc' | 'desc'>('asc')
+  const [showPast,   setShowPast]   = useState(false)
 
   useEffect(() => {
     fetch('/api/admin/events')
@@ -156,8 +172,7 @@ export default function AdminEventsPage() {
   async function togglePin(event: Event) {
     setSaving(event.id)
     const newPinned = !event.is_pinned
-    const currentPinned = events.filter(e => e.is_pinned && e.id !== event.id).length
-    if (newPinned && currentPinned >= 4) {
+    if (newPinned && events.filter(e => e.is_pinned && e.id !== event.id).length >= 4) {
       alert('You already have 4 featured events. Unfeature one first.')
       setSaving(null)
       return
@@ -189,36 +204,134 @@ export default function AdminEventsPage() {
     setTimeout(() => setJustAdded(null), 2000)
   }
 
-  const pinned   = events.filter(e => e.is_pinned)
-  const unpinned = events.filter(e => !e.is_pinned)
+  // ── Derived data ──────────────────────────────────────────────────────────
+  const cities = useMemo(() => {
+    const cs = [...new Set(events.map(e => e.city).filter(Boolean))] as string[]
+    return cs.sort()
+  }, [events])
+
+  const pinned = useMemo(() => events.filter(e => e.is_pinned), [events])
+
+  // Apply search + city + past filter, then sort
+  const filtered = useMemo(() => {
+    let list = events.filter(e => !e.is_pinned)
+    if (!showPast)     list = list.filter(e => !isPast(e.event_date))
+    if (search)        list = list.filter(e => e.title.toLowerCase().includes(search.toLowerCase()))
+    if (cityFilter !== 'all') list = list.filter(e => e.city === cityFilter)
+    list = [...list].sort((a, b) => {
+      const cmp = a.event_date.localeCompare(b.event_date)
+      return sortDir === 'asc' ? cmp : -cmp
+    })
+    return list
+  }, [events, search, cityFilter, sortDir, showPast])
+
+  // Group by month
+  const monthGroups = useMemo(() => {
+    const map = new Map<string, { label: string; events: Event[] }>()
+    for (const e of filtered) {
+      const key = monthKey(e.event_date)
+      if (!map.has(key)) map.set(key, { label: monthLabel(e.event_date), events: [] })
+      map.get(key)!.events.push(e)
+    }
+    const entries = [...map.entries()].sort(([a], [b]) =>
+      sortDir === 'asc' ? a.localeCompare(b) : b.localeCompare(a)
+    )
+    return entries.map(([key, val]) => ({ key, ...val }))
+  }, [filtered, sortDir])
+
+  const pastCount = useMemo(
+    () => events.filter(e => !e.is_pinned && isPast(e.event_date)).length,
+    [events]
+  )
+
+  const todayKey = new Date().toISOString().slice(0, 7)
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
 
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+      {/* ── Header ── */}
+      <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
         <div>
           <Link href="/admin" className="text-sm text-brand-purple hover:underline">← Admin</Link>
           <h1 className="font-display text-2xl font-bold text-brand-navy mt-1">Live Events</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Toggle ⭐ to feature on the home page · ✉️ Email to build your newsletter draft.
+            ⭐ Feature on home page · ✉️ Add to newsletter draft
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           {emailDraft.length > 0 && (
             <span className="text-xs bg-brand-coral text-white font-semibold px-3 py-1.5 rounded-full">
               ✉️ {emailDraft.length} in draft ↓
             </span>
           )}
-          <span className="text-sm bg-brand-lavender text-brand-purple font-semibold px-3 py-1 rounded-full">
+          <span className="text-xs bg-brand-lavender text-brand-purple font-semibold px-3 py-1.5 rounded-full">
             {pinned.length}/4 featured
+          </span>
+          <span className="text-xs bg-gray-100 text-gray-500 font-semibold px-3 py-1.5 rounded-full">
+            {events.length} total
           </span>
         </div>
       </div>
 
-      {loading && (
-        <div className="text-center py-16 text-gray-400">Loading events…</div>
+      {/* ── Filter / sort bar ── */}
+      {!loading && events.length > 0 && (
+        <div className="bg-white border border-gray-100 rounded-2xl p-3 mb-6 flex flex-wrap gap-2 items-center">
+
+          {/* Search */}
+          <input
+            type="text"
+            placeholder="Search events…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="flex-1 min-w-[160px] text-sm px-3 py-1.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-purple placeholder-gray-400 text-brand-navy"
+          />
+
+          {/* City filter */}
+          {cities.length > 1 && (
+            <select
+              value={cityFilter}
+              onChange={e => setCityFilter(e.target.value)}
+              className="text-sm px-3 py-1.5 rounded-xl border border-gray-200 focus:outline-none focus:border-brand-purple text-brand-navy bg-white"
+            >
+              <option value="all">All cities</option>
+              {cities.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+          )}
+
+          {/* Sort direction */}
+          <button
+            onClick={() => setSortDir(d => d === 'asc' ? 'desc' : 'asc')}
+            className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-xl border border-gray-200 hover:border-brand-purple text-brand-navy font-medium transition-all"
+            title="Toggle sort order"
+          >
+            📅 Date {sortDir === 'asc' ? '↑ Oldest first' : '↓ Newest first'}
+          </button>
+
+          {/* Show past toggle */}
+          <button
+            onClick={() => setShowPast(v => !v)}
+            className={`text-sm px-3 py-1.5 rounded-xl border font-medium transition-all ${
+              showPast
+                ? 'bg-gray-100 border-gray-300 text-gray-600'
+                : 'border-gray-200 text-gray-400 hover:border-gray-300'
+            }`}
+          >
+            {showPast ? '🕐 Hiding past' : `🕐 Show past (${pastCount})`}
+          </button>
+
+          {/* Clear filters */}
+          {(search || cityFilter !== 'all') && (
+            <button
+              onClick={() => { setSearch(''); setCityFilter('all') }}
+              className="text-xs text-brand-purple hover:underline font-semibold"
+            >
+              Clear ×
+            </button>
+          )}
+        </div>
       )}
+
+      {loading && <div className="text-center py-16 text-gray-400">Loading events…</div>}
 
       {!loading && events.length === 0 && (
         <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center text-gray-400">
@@ -227,51 +340,97 @@ export default function AdminEventsPage() {
         </div>
       )}
 
-      {/* Featured section */}
+      {/* ── Featured ── */}
       {pinned.length > 0 && (
         <div className="mb-8">
-          <p className="text-xs font-semibold text-brand-purple uppercase tracking-wider mb-3">
-            ⭐ Featured on home page
-          </p>
-          <div className="flex flex-col gap-3">
-            {pinned.map(event => (
-              <EventRow
-                key={event.id}
-                event={event}
-                saving={saving === event.id}
-                justAdded={justAdded === event.id}
-                onTogglePin={() => togglePin(event)}
-                onDelete={() => deleteEvent(event.id)}
-                onAddToEmail={() => addToEmailDraft(event)}
-              />
-            ))}
+          <div className="flex items-center gap-2 mb-3">
+            <p className="text-xs font-semibold text-brand-purple uppercase tracking-wider">
+              ⭐ Featured on home page
+            </p>
+            <span className="text-xs text-brand-purple/60">{pinned.length}/4</span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {[...pinned]
+              .sort((a, b) => sortDir === 'asc'
+                ? a.event_date.localeCompare(b.event_date)
+                : b.event_date.localeCompare(a.event_date)
+              )
+              .map(event => (
+                <EventRow
+                  key={event.id}
+                  event={event}
+                  saving={saving === event.id}
+                  justAdded={justAdded === event.id}
+                  onTogglePin={() => togglePin(event)}
+                  onDelete={() => deleteEvent(event.id)}
+                  onAddToEmail={() => addToEmailDraft(event)}
+                />
+              ))}
           </div>
         </div>
       )}
 
-      {/* All other events */}
-      {unpinned.length > 0 && (
-        <div>
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-            All live events
-          </p>
-          <div className="flex flex-col gap-3">
-            {unpinned.map(event => (
-              <EventRow
-                key={event.id}
-                event={event}
-                saving={saving === event.id}
-                justAdded={justAdded === event.id}
-                onTogglePin={() => togglePin(event)}
-                onDelete={() => deleteEvent(event.id)}
-                onAddToEmail={() => addToEmailDraft(event)}
-              />
-            ))}
-          </div>
+      {/* ── Month groups ── */}
+      {!loading && monthGroups.length === 0 && events.length > 0 && (
+        <div className="text-center py-10 text-gray-400 text-sm">
+          No events match your filters.{' '}
+          <button onClick={() => { setSearch(''); setCityFilter('all'); setShowPast(true) }} className="text-brand-purple hover:underline">
+            Clear filters
+          </button>
         </div>
       )}
 
-      {/* Email Draft Panel — appears below the list, no auto-scroll */}
+      <div className="space-y-8">
+        {monthGroups.map(group => {
+          const isCurrentMonth = group.key === todayKey
+          const isPastMonth    = group.key < todayKey
+
+          return (
+            <div key={group.key}>
+              {/* Month header */}
+              <div className={`flex items-center gap-3 mb-3 pb-2 border-b ${
+                isPastMonth ? 'border-gray-100' : 'border-brand-purple/20'
+              }`}>
+                <h2 className={`font-display text-base font-bold ${
+                  isPastMonth ? 'text-gray-400' : 'text-brand-navy'
+                }`}>
+                  {group.label}
+                </h2>
+                {isCurrentMonth && (
+                  <span className="text-xs bg-brand-purple text-white font-semibold px-2 py-0.5 rounded-full">
+                    This month
+                  </span>
+                )}
+                {isPastMonth && (
+                  <span className="text-xs bg-gray-100 text-gray-400 font-medium px-2 py-0.5 rounded-full">
+                    Past
+                  </span>
+                )}
+                <span className="text-xs text-gray-400 ml-auto">
+                  {group.events.length} event{group.events.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                {group.events.map(event => (
+                  <EventRow
+                    key={event.id}
+                    event={event}
+                    saving={saving === event.id}
+                    justAdded={justAdded === event.id}
+                    onTogglePin={() => togglePin(event)}
+                    onDelete={() => deleteEvent(event.id)}
+                    onAddToEmail={() => addToEmailDraft(event)}
+                    dimmed={isPast(event.event_date)}
+                  />
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* ── Email Draft Panel ── */}
       <EmailDraftPanel
         draft={emailDraft}
         onRemove={i => setEmailDraft(prev => prev.filter((_, idx) => idx !== i))}
@@ -281,6 +440,7 @@ export default function AdminEventsPage() {
   )
 }
 
+// ── Event Row ─────────────────────────────────────────────────────────────────
 function EventRow({
   event,
   saving,
@@ -288,6 +448,7 @@ function EventRow({
   onTogglePin,
   onDelete,
   onAddToEmail,
+  dimmed = false,
 }: {
   event: Event
   saving: boolean
@@ -295,10 +456,15 @@ function EventRow({
   onTogglePin: () => void
   onDelete: () => void
   onAddToEmail: () => void
+  dimmed?: boolean
 }) {
   return (
     <div className={`bg-white rounded-2xl border p-4 flex items-center gap-4 transition-all ${
-      event.is_pinned ? 'border-brand-purple/40 shadow-sm' : 'border-gray-100'
+      event.is_pinned
+        ? 'border-brand-purple/40 shadow-sm'
+        : dimmed
+          ? 'border-gray-100 opacity-50 hover:opacity-80'
+          : 'border-gray-100 hover:border-gray-200'
     }`}>
 
       {/* Pin toggle */}
@@ -306,8 +472,8 @@ function EventRow({
         onClick={onTogglePin}
         disabled={saving}
         title={event.is_pinned ? 'Remove from home page' : 'Feature on home page'}
-        className={`text-2xl leading-none flex-shrink-0 transition-transform hover:scale-110 disabled:opacity-40 ${
-          event.is_pinned ? 'opacity-100' : 'opacity-25 hover:opacity-60'
+        className={`text-xl leading-none flex-shrink-0 transition-transform hover:scale-110 disabled:opacity-40 ${
+          event.is_pinned ? 'opacity-100' : 'opacity-20 hover:opacity-60'
         }`}
       >
         ⭐
@@ -317,7 +483,7 @@ function EventRow({
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-brand-navy text-sm truncate">{event.title}</p>
         <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-500 flex-wrap">
-          <span>📅 {formatDate(event.event_date)}</span>
+          <span className="font-medium text-gray-600">📅 {formatDate(event.event_date)}</span>
           {event.event_time && <span>🕐 {event.event_time}</span>}
           {event.city && <span>📍 {event.city}</span>}
           <span className={event.is_free ? 'text-green-600 font-medium' : ''}>
@@ -328,7 +494,6 @@ function EventRow({
 
       {/* Actions */}
       <div className="flex items-center gap-2 flex-shrink-0">
-        {/* Convert to Email */}
         <button
           onClick={onAddToEmail}
           disabled={saving}
