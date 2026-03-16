@@ -36,7 +36,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .limit(500)
 
     if (events) {
-      eventPages = events
+      type EventRow = { slug: string | null; created_at: string }
+      eventPages = (events as EventRow[])
         .filter(e => e.slug)
         .map(e => ({
           url: `${BASE_URL}/events/${e.slug}`,
@@ -60,7 +61,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .limit(200)
 
     if (resources) {
-      resourcePages = resources
+      type ResourceRow = { slug: string | null; updated_at: string | null }
+      resourcePages = (resources as ResourceRow[])
         .filter(r => r.slug)
         .map(r => ({
           url: `${BASE_URL}/resources/${r.slug}`,
