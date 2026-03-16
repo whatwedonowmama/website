@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { SEED_EVENTS, getSeedEvent } from '@/lib/seed-events'
 import { createServiceClient } from '@/lib/supabase/server'
+import EventSchema from '@/components/EventSchema'
 
 export const revalidate = 3600
 
@@ -63,6 +64,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
+/** Convert "2026-03-17" + "10:00 AM" → "2026-03-17T10:00:00" for schema.org */
+function toIsoDateTime(dateStr: string, timeStr?: string | null): string {
+  if (!dateStr) return ''
+  try {
+    if (!timeStr || timeStr === 'TBD') return `${dateStr}T00:00:00`
+    // Parse "10:00 AM" / "2:30 PM" style times
+    const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(am|pm)/i)
+    if (match) {
+      let hours   = parseInt(match[1], 10)
+      const mins  = match[2]
+      const ampm  = match[3].toLowerCase()
+      if (ampm === 'pm' && hours < 12) hours += 12
+      if (ampm === 'am' && hours === 12) hours = 0
+      return `${dateStr}T${String(hours).padStart(2, '0')}:${mins}:00`
+    }
+    return `${dateStr}T00:00:00`
+  } catch { return `${dateStr}T00:00:00` }
+}
+
 function formatFullDate(dateStr: string): string {
   try {
     const d = new Date(dateStr + 'T12:00:00')
@@ -81,8 +101,21 @@ export default async function EventPage({ params }: Props) {
 
   const fullDate = formatFullDate(event.date)
 
+  const startDate = toIsoDateTime(event.date, event.time)
+  const pageUrl   = `https://whatwedonowmama.com/events/${event.slug}`
+
   return (
     <div className="bg-brand-cream min-h-screen">
+      <EventSchema
+        name={event.title}
+        description={event.description}
+        startDate={startDate}
+        locationName={event.location || event.city}
+        locationCity={event.city}
+        url={pageUrl}
+        image={'image_url' in event ? (event.image_url as string | null) : null}
+        isFree={event.is_free}
+      />
 
       {/* ── HERO BANNER ── */}
       <section className={`bg-gradient-to-br ${event.placeholderGradient} px-4 py-16 md:py-20`}>

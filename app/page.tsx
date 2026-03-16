@@ -1,5 +1,11 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+
+export const metadata: Metadata = {
+  title: 'Family Events & Parenting Resources for Orange County Parents | whatwedonowmama',
+  description: 'Weekly family events and honest parenting resources for Orange County parents. Browse free events, farmers markets, and local guides. Free to join.',
+}
 import ResourceCard from '@/components/ResourceCard'
 import EventListItem from '@/components/EventListItem'
 import { getWeekRange } from '@/lib/utils'
@@ -74,15 +80,16 @@ export default async function HomePage() {
 
             {/* Left: Text */}
             <div className="flex-1 text-center md:text-left flex flex-col gap-5">
-              <p className="font-script text-brand-gold text-2xl">
-                for Orange County parents
-              </p>
+              {/* SEO H1 — keyword-rich, visually de-emphasised vs tagline below */}
+              <h1 className="font-display text-xl md:text-2xl font-semibold text-white/70 leading-snug tracking-wide">
+                Family Events &amp; Resources for Orange County Parents
+              </h1>
 
-              {/* ① Brand name — intentional childlike grammar */}
-              <h1 className="font-display text-4xl md:text-5xl font-bold text-white leading-tight">
+              {/* Brand tagline — visual hero, demoted from H1 for SEO */}
+              <p className="font-display text-4xl md:text-5xl font-bold text-white leading-tight">
                 What we do<br />
                 <span className="italic text-brand-gold">now</span>, mama?
-              </h1>
+              </p>
 
               <p className="text-brand-lavender/90 text-lg leading-relaxed max-w-md">
                 Free weekly events, honest parenting guides, and a community of OC parents who get it.

@@ -6,8 +6,8 @@ import type { Metadata } from 'next'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'OC Family Events — whatwedonowmama',
-  description: 'Free and affordable family events in Orange County. Browse by week or month.',
+  title: 'Family Events in Orange County This Week | whatwedonowmama',
+  description: 'Free and affordable family events in Orange County, updated every week. Filter by city — Huntington Beach, Newport Beach, Tustin, and more.',
 }
 
 // ── Category config ───────────────────────────────────────────────────────────
@@ -101,10 +101,10 @@ function getWeekDates(offset: number): { start: string; end: string; label: stri
   const range   = Math.abs(offset) <= 1 ? `${fmt(monday)} – ${fmt(sunday)}` : `${fmtFull(monday)} – ${fmtFull(sunday)}`
 
   let heading: string
-  if (offset === 0)       heading = 'This Week in OC'
-  else if (offset === 1)  heading = 'Next Week in OC'
-  else if (offset === -1) heading = 'Last Week in OC'
-  else                    heading = 'OC Family Events'
+  if (offset === 0)       heading = 'Family Events in Orange County This Week'
+  else if (offset === 1)  heading = 'Family Events in Orange County Next Week'
+  else if (offset === -1) heading = 'Family Events in Orange County Last Week'
+  else                    heading = 'Family Events in Orange County'
 
   return { start: isoDate(monday), end: isoDate(sunday), label: range, heading }
 }
@@ -116,9 +116,9 @@ function getMonthDates(offset: number): { start: string; end: string; label: str
 
   const monthName = start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
   let heading: string
-  if (offset === 0)      heading = `This Month in OC`
-  else if (offset === 1) heading = `Next Month in OC`
-  else                   heading = `OC Family Events`
+  if (offset === 0)      heading = `Family Events in Orange County This Month`
+  else if (offset === 1) heading = `Family Events in Orange County Next Month`
+  else                   heading = `Family Events in Orange County`
 
   return { start: isoDate(start), end: isoDate(end), label: monthName, heading }
 }
