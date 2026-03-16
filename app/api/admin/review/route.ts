@@ -61,17 +61,10 @@ export async function POST(req: NextRequest) {
     const merged = { ...item, ...(updates ?? {}) }
 
     if (item.content_type === 'event') {
-      // Slugify title for the events table
-      const slug = merged.title
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-|-$/g, '')
-
       // Normalise event_date to YYYY-MM-DD (Postgres date type rejects other formats)
       // AI scrapers sometimes return "March 15, 2026" or "3/15/2026" etc.
       function toIsoDate(raw: string | null | undefined): string | null {
         if (!raw) return null
-        // Already ISO
         if (/^\d{4}-\d{2}-\d{2}/.test(raw)) return raw.slice(0, 10)
         const parsed = new Date(raw)
         if (!isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10)
@@ -85,19 +78,42 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      const { error: insertError } = await supabaseService.from('events').insert({
-        title:         merged.title,
-        description:   merged.description,
-        event_date:    isoDate,
-        event_time:    merged.event_time,
-        location_name: merged.location_name,
-        city:          merged.city,
-        price:         merged.price ?? 'Free',
-        is_free:       merged.is_free ?? true,
-        source_url:    merged.source_url,
-        is_pinned:     false,
-        slug,
-      })
+      // Build a slug from the title. If that collides (same event recurring monthly),
+      // automatically append the date, then a short timestamp as a last resort.
+      function makeSlug(title: string, suffix?: string): string {
+        const base = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+        return suffix ? `${base}-${suffix}` : base
+      }
+
+      const slugCandidates = [
+        makeSlug(merged.title),               // e.g. free-kids-workshop-at-home-depot
+        makeSlug(merged.title, isoDate),      // e.g. free-kids-workshop-at-home-depot-2026-04-05
+        makeSlug(merged.title, `${isoDate}-${Date.now().toString(36)}`), // guaranteed unique
+      ]
+
+      let insertError = null
+      for (const slug of slugCandidates) {
+        const { error } = await supabaseService.from('events').insert({
+          title:         merged.title,
+          description:   merged.description,
+          event_date:    isoDate,
+          event_time:    merged.event_time,
+          location_name: merged.location_name,
+          city:          merged.city,
+          price:         merged.price ?? 'Free',
+          is_free:       merged.is_free ?? true,
+          source_url:    merged.source_url,
+          is_pinned:     false,
+          slug,
+        })
+        if (!error) { insertError = null; break }
+        // Only retry on slug uniqueness violations; surface other errors immediately
+        if (!error.message.includes('events_slug_unique')) {
+          insertError = error
+          break
+        }
+        insertError = error
+      }
 
       if (insertError) {
         console.error('[review/approve] events insert failed:', insertError)
