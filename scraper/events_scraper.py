@@ -272,12 +272,15 @@ def ai_scrape_site(site: dict, html_content: str, cities: list, tags: list) -> l
     name = site["name"]
     url  = site["url"]
 
-    # ── Step 1: extract all links BEFORE stripping HTML ──────────────────────
-    # We pass these to Claude so it can find specific event-detail page URLs
-    # instead of always returning the source listing page URL.
-    links_section = ""
+    # ── Step 1: extract all links AND images BEFORE stripping HTML ───────────
+    # Links let Claude pick specific event-detail page URLs.
+    # Images let Claude associate a photo with each event.
+    links_section  = ""
+    images_section = ""
     try:
         soup_links = BeautifulSoup(html_content, "html.parser")
+
+        # Links
         seen_link_urls = set()
         unique_links   = []
         for a in soup_links.find_all("a", href=True):
@@ -294,8 +297,37 @@ def ai_scrape_site(site: dict, html_content: str, cities: list, tags: list) -> l
             links_section = "\n\nLINKS ON THIS PAGE (use the best matching link for each event\'s url field):\n"
             for link_text, link_url in unique_links[:100]:
                 links_section += f"  {link_text} → {link_url}\n"
+
+        # Images — collect unique absolute src URLs that look like photos
+        seen_img_urls = set()
+        unique_images = []
+        for img in soup_links.find_all("img", src=True):
+            src = img["src"].strip()
+            if not src or src.startswith("data:"):
+                continue
+            abs_src = urljoin(url, src)
+            if not abs_src.startswith("http") or abs_src in seen_img_urls:
+                continue
+            # Skip tiny icons/tracking pixels (no size hint is fine — include it)
+            w = img.get("width", "")
+            h = img.get("height", "")
+            try:
+                if w and int(w) < 60:
+                    continue
+                if h and int(h) < 60:
+                    continue
+            except (ValueError, TypeError):
+                pass
+            seen_img_urls.add(abs_src)
+            alt = img.get("alt", "").strip()
+            unique_images.append((alt, abs_src))
+        if unique_images:
+            images_section = "\n\nIMAGES ON THIS PAGE (pick the best one for each event\'s image_url field; null if none fits):\n"
+            for img_alt, img_src in unique_images[:40]:
+                images_section += f"  [{img_alt}] {img_src}\n"
+
     except Exception as link_err:
-        logger.debug(f"  Link extraction error: {link_err}")
+        logger.debug(f"  Link/image extraction error: {link_err}")
 
     # ── Step 2: strip HTML to readable text ──────────────────────────────────
     try:
@@ -309,28 +341,42 @@ def ai_scrape_site(site: dict, html_content: str, cities: list, tags: list) -> l
         logger.warning(f"  AI extraction: could not clean HTML — {e}")
         return []
 
-    # ── Step 3: build prompt with family filter + links ───────────────────────
+    # ── Step 3: build prompt with family filter + links + images ─────────────
+    today_str = datetime.now().strftime("%Y-%m-%d")
     prompt = f"""You are a data extraction assistant for a family events newsletter in Orange County, CA.
+Today\'s date is {today_str}.
 
 AUDIENCE FILTER — CRITICAL:
-Only extract events that are relevant to FAMILIES WITH CHILDREN (ages 0-14).
+Only extract events that are specifically for KIDS or FAMILIES WITH CHILDREN (ages 0-14).
 INCLUDE: kids activities, children\'s programs, family-friendly outings, parent-child classes,
   toddler storytime, family festivals, youth sports, family nature walks, free community events.
 SKIP entirely: adult-only events, corporate events, business conferences, fundraising galas,
   sponsorship opportunities, generic page sections with no specific event, recurring classes
   with no upcoming date, or anything not specifically relevant to families with kids.
 
+DATE FILTER — CRITICAL:
+- SKIP any event dated in 2025 or earlier.
+- SKIP any event whose date has already passed (before today {today_str}).
+- Only include events happening on or after today.
+- If you cannot determine a date, include the event but set date to null.
+
+REQUIRED FIELDS — if you cannot find Event Name, Description, Location, AND a Start time,
+skip that event entirely.
+
 For each qualifying event return a JSON object with these exact fields (null for missing):
-  title         — event name (string, required)
-  date          — YYYY-MM-DD preferred; raw date text if format unclear (string or null)
-  time          — start time e.g. "10:00 AM" (string or null)
-  location_name — venue or place name (string or null)
+  title         — event name (string, REQUIRED)
+  date          — YYYY-MM-DD (string or null) — 2026 default year if year unclear
+  time          — start time e.g. "10:00 AM" (string, REQUIRED)
+  end_time      — end time e.g. "2:00 PM" (string or null)
+  location_name — venue or place name (string, REQUIRED)
   city          — city in Orange County CA (string, default "Orange County")
-  description   — 1-2 sentences, family-friendly tone (string)
+  description   — 1-2 sentences, family-friendly tone (string, REQUIRED)
   url           — SPECIFIC event detail page URL from the LINKS section below if available,
                   otherwise the source page URL. Do NOT use placeholder or example.com URLs.
   price         — e.g. "Free", "$10/child", "Check website" (string)
   is_free       — true/false/null (boolean or null)
+  image_url     — absolute URL of the best photo for this event from the IMAGES section below,
+                  or null if none is relevant
   categories    — relevant tags from: {json.dumps(tags or ["family", "kids"])} (array)
 
 Return ONLY a valid JSON array. If you find no qualifying family events, return [].
@@ -338,7 +384,7 @@ No markdown, no explanation — raw JSON only.
 
 Source: {name}
 Source URL: {url}
-{links_section}
+{links_section}{images_section}
 Page text:
 {page_text}"""
 
@@ -362,6 +408,7 @@ Page text:
             return []
 
         # Normalise to the same shape as scrape_site output
+        today = datetime.now()
         results = []
         for ev in ai_events:
             if not ev.get("title"):
@@ -371,6 +418,22 @@ Page text:
             if "example.com" in ev_url:
                 ev_url = url
 
+            # Post-extraction date filter: skip 2025 or past events
+            ev_date_str = ev.get("date") or ""
+            if ev_date_str:
+                # Reject anything dated in 2025 or earlier
+                if ev_date_str.startswith("2025") or ev_date_str < "2026":
+                    logger.debug(f"  Skipping stale event '{ev.get('title')}' dated {ev_date_str}")
+                    continue
+                # Reject dates already passed
+                try:
+                    ev_dt = datetime.strptime(ev_date_str[:10], "%Y-%m-%d")
+                    if ev_dt.date() < today.date():
+                        logger.debug(f"  Skipping past event '{ev.get('title')}' dated {ev_date_str}")
+                        continue
+                except ValueError:
+                    pass  # keep if we can't parse
+
             event_id = hashlib.md5(f"{ev['title']}-{name}-{ev.get('date','')}".encode()).hexdigest()[:12]
             results.append({
                 "id":            event_id,
@@ -379,7 +442,7 @@ Page text:
                 "description":   ev.get("description") or f"{ev.get('title','')} in {ev.get('city', 'OC')}",
                 "date":          ev.get("date") or (datetime.now() + timedelta(days=7)).strftime("%Y-%m-%d"),
                 "time":          ev.get("time") or "TBD",
-                "end_time":      "TBD",
+                "end_time":      ev.get("end_time") or "TBD",
                 "city":          ev.get("city") or "Orange County",
                 "state":         "CA",
                 "location_name": ev.get("location_name") or "See event page",
@@ -388,6 +451,7 @@ Page text:
                 "price_numeric": 0 if ev.get("is_free") else None,
                 "is_free":       ev.get("is_free"),
                 "categories":    ev.get("categories") or tags,
+                "image_url":     ev.get("image_url") or None,
                 "age_range":     "All ages",
                 "scraped_at":    datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "is_mock":       False,

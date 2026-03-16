@@ -47,6 +47,7 @@ export interface Event {
   price: string
   is_free: boolean
   source_url: string | null
+  image_url: string | null
   is_pinned: boolean
   created_at: string
 }
@@ -70,6 +71,7 @@ export interface PendingContent {
   is_free:       boolean
   category:      string | null
   tags:          string[] | null
+  image_url:     string | null
   scraped_at:    string
   reviewed_at:   string | null
   notes:         string | null

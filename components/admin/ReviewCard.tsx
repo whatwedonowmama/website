@@ -52,6 +52,7 @@ export default function ReviewCard({ item, onDone, onApprove }: Props) {
     is_free:       item.is_free,
     category:      item.category ?? '',
     source_url:    item.source_url ?? '',
+    image_url:     item.image_url ?? '',
   })
 
   async function act(action: 'approve' | 'reject') {
@@ -212,6 +213,27 @@ export default function ReviewCard({ item, onDone, onApprove }: Props) {
               />
             </label>
 
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-medium text-gray-500">Image URL</span>
+              <input
+                className="input-field text-sm"
+                value={fields.image_url}
+                onChange={e => setFields(f => ({ ...f, image_url: e.target.value }))}
+                placeholder="https://…"
+              />
+              {fields.image_url && (
+                <div className="rounded-xl overflow-hidden h-28 bg-gray-100 mt-1">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={fields.image_url}
+                    alt="preview"
+                    className="w-full h-full object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                  />
+                </div>
+              )}
+            </label>
+
             {/* Edit actions */}
             <div className="flex gap-2 pt-1">
               <button
@@ -232,6 +254,19 @@ export default function ReviewCard({ item, onDone, onApprove }: Props) {
         ) : (
           /* ── READ VIEW ── */
           <>
+            {/* Event image thumbnail */}
+            {fields.image_url && (
+              <div className="rounded-2xl overflow-hidden h-40 bg-gray-100 -mx-5 -mt-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={fields.image_url}
+                  alt={fields.title}
+                  className="w-full h-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
+              </div>
+            )}
+
             <div>
               <h3 className="font-display font-bold text-brand-navy text-lg leading-snug">
                 {fields.title}

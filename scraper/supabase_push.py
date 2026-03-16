@@ -160,6 +160,7 @@ def map_event_to_row(event: dict) -> dict:
         "scraped_at":    event.get("scraped_at") or datetime.utcnow().isoformat() + "Z",
         "fingerprint":   fp,
         "notes":         f"fingerprint:{fp}",  # keep for backward compat
+        "image_url":     event.get("image_url") or None,
     }
 
 

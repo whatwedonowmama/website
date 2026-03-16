@@ -103,6 +103,7 @@ export async function POST(req: NextRequest) {
           price:         merged.price ?? 'Free',
           is_free:       merged.is_free ?? true,
           source_url:    merged.source_url,
+          image_url:     merged.image_url ?? null,
           is_pinned:     false,
           slug,
         })
@@ -161,7 +162,7 @@ export async function POST(req: NextRequest) {
   if (action === 'edit') {
     const allowedFields = [
       'title', 'description', 'event_date', 'event_time',
-      'location_name', 'city', 'price', 'is_free', 'category', 'tags', 'source_url',
+      'location_name', 'city', 'price', 'is_free', 'category', 'tags', 'source_url', 'image_url',
     ]
     const safeUpdates = Object.fromEntries(
       Object.entries(updates ?? {}).filter(([k]) => allowedFields.includes(k))
