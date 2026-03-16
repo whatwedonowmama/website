@@ -26,6 +26,136 @@ export interface SeedResource {
 
 export const SEED_RESOURCES: SeedResource[] = [
   // ─────────────────────────────────────────────────────────────────
+  // 0. Summer Camps Orange County 2026
+  // ─────────────────────────────────────────────────────────────────
+  {
+    id: 'seed-0',
+    slug: 'summer-camps-orange-county-2026',
+    title: 'The 2026 Guide to Summer Camps in Orange County',
+    excerpt:
+      'Good camps fill up fast — waitlists-in-April fast. We\'ve rounded up the best OC summer camps across sports, arts, STEM, and outdoor programs so you can stop Googling and start registering.',
+    category: 'oc-guides',
+    access_level: 'free',
+    status: 'published',
+    featured: true,
+    read_time_minutes: 8,
+    hero_image_url: null,
+    meta_title: 'Best Summer Camps in Orange County 2026 | whatwedonowmama',
+    meta_description:
+      'The complete guide to summer camps in Orange County 2026 — sports, arts, STEM, and outdoor camps for kids ages 4–17, organized by city with registration tips.',
+    published_at: '2026-03-15T08:00:00Z',
+    created_at: '2026-03-15T08:00:00Z',
+    updated_at: '2026-03-15T08:00:00Z',
+    tags: ['Summer', 'OC Guide', 'Activities', 'Events'],
+    author: 'whatwedonowmama team',
+    body: `
+<p class="lead">Summer is almost here, and if you're an OC parent, you already know: good camps fill up fast. We're talking waitlists-in-April fast.</p>
+
+<p>Whether you're looking for a week of beach science, a robotics deep dive, or just somewhere your kid can run around with friends until August, Orange County has some genuinely great options. We've rounded up the best summer camps across all categories — sports, arts, STEM, outdoor, and full-day programs — so you can stop Googling and start registering.</p>
+
+<h2>What to Know Before You Register</h2>
+
+<p>A few things that'll save you headaches:</p>
+
+<ul>
+  <li><strong>Book early.</strong> Most OC camps open registration in February or March for summer sessions running June through August. If you're reading this in April or May, some popular camps will already have waitlists — but plenty of spots remain, especially for mid-July and August weeks.</li>
+  <li><strong>Early bird discounts are real.</strong> Programs like Camp Newport and several city recreation departments offer 10% off for registrations before late April.</li>
+  <li><strong>City rec programs are the best-kept secret.</strong> Huntington Beach, Newport Beach, Irvine, and Tustin all run city-operated summer camps that are significantly cheaper than private options — often $150–$300 per week versus $400–$700 at specialty camps. They're worth checking first.</li>
+  <li><strong>Age ranges vary widely.</strong> Most camps serve ages 5–12, but a growing number have strong teen programs (6th–8th grade) that are worth knowing about.</li>
+</ul>
+
+<h2>🏅 Sports Camps in Orange County</h2>
+
+<h3>YMCA of Orange County — Teen Sports &amp; Day Camps</h3>
+<p>The Y runs summer camps out of multiple OC locations including Huntington Beach, Aliso Viejo, Laguna Niguel, and Mission Viejo. Sports offerings include swim, esports, adventure, and team sports. Their Teen Summer Camps are specifically designed for grades 6–8 and take a more independent, leadership-focused approach than typical day camps. <a href="https://www.ymcaoc.org" target="_blank" rel="noopener noreferrer">ymcaoc.org</a></p>
+
+<h3>Huntington Beach City Parks &amp; Recreation — Camp HB</h3>
+<p>One of the best deals in the city. Camp HB runs weekly themed programs Monday–Friday with games, creative crafts, and off-site excursions. Choose between a 3-day version (Mon/Wed/Fri) or a full 5-day week. It's run by the city, so pricing is much lower than private camps. Check huntingtonbeachca.gov for the current session calendar — registration opens each spring.</p>
+
+<h3>Grip N Rip Junior Tennis (Huntington Beach)</h3>
+<p>A local favorite for junior tennis development. Weekly sessions, multiple age groups, and available throughout the summer. Great option for kids who've been playing a year or more and want structured instruction.</p>
+
+<h3>SCATS Gymnastics (multiple OC locations)</h3>
+<p>Gymnastics-focused summer camps for ages 4 and up, with sessions available across several OC cities. Half-day and full-day options. Particularly popular for kids who want to train seriously over the summer without committing to year-round competitive gymnastics.</p>
+
+<h2>🎨 Arts &amp; Creative Camps in Orange County</h2>
+
+<h3>Aspire Art Studios (Newport Beach)</h3>
+<p>A boutique art camp focused on drawing, painting, mixed media, and sculpture. Small class sizes and a genuine focus on creative development rather than just keeping kids busy. One of the more consistently well-reviewed arts camps in the Newport Beach area.</p>
+
+<h3>Camp HB — Creative Themes (Huntington Beach)</h3>
+<p>Camp HB's weekly themes lean heavily into creative arts and crafts alongside outdoor play. Take-home projects are a feature, not an afterthought. Good low-pressure intro to arts-focused summer programming for younger kids (K–5th grade).</p>
+
+<h3>Irvine Fine Arts Center</h3>
+<p>The City of Irvine's Fine Arts Center runs summer workshops in visual art, ceramics, and drawing for kids and teens. These aren't just keep-busy camps — they're structured around real art instruction. Check the City of Irvine community services calendar in the spring for session dates.</p>
+
+<h3>Boys &amp; Girls Club of Newport Beach</h3>
+<p>The Newport Beach club runs summer programs that include arts and music alongside sports and academic enrichment. Sliding scale pricing makes this accessible to a wider range of families. Ages 6–18.</p>
+
+<h2>🔬 STEM &amp; Tech Camps in Orange County</h2>
+
+<h3>Newport Sea Base (Newport Beach)</h3>
+<p>This is one of the most unique STEM experiences in OC — and it uses the water. Newport Sea Base runs quarter-day, half-day, and full-day sessions covering sailing, kayaking, oceanography, STEM design and build workshops, bay and ocean fishing, robotics, and even cooking. The marine science angle makes it stand out from every other tech camp in the county. Ages vary by program. <a href="https://www.newportseabase.org" target="_blank" rel="noopener noreferrer">newportseabase.org</a></p>
+
+<h3>Camp Tech Revolution (multiple OC locations)</h3>
+<p>Running June 15 through August 14, Camp Tech Revolution is a weekly camp covering robotics, coding, game design, Minecraft, Roblox, AI, 3D printing, YouTube content creation, filmmaking, digital art, and more. Over 70 themed weeks for ages 4–15, led by certified teachers. One of the most comprehensive STEM camp offerings in the county. <a href="https://www.lavnercampsandprograms.com" target="_blank" rel="noopener noreferrer">lavnercampsandprograms.com</a></p>
+
+<h3>Galileo Camp (Newport Beach &amp; Irvine)</h3>
+<p>Galileo is a nationally recognized STEAM camp with OC locations in Newport Beach (accessible from Costa Mesa, HB, Santa Ana, and Tustin) and Irvine. Their curriculum blends science, technology, art, and entrepreneurship in a project-based format. Camp Galileo is now enrolling for Summer 2026. <a href="https://www.galileo-camps.com" target="_blank" rel="noopener noreferrer">galileo-camps.com</a></p>
+
+<h3>Irvine Ranch Outdoor Education Center — STEM + Adventure</h3>
+<p>Don't let the "outdoor" name fool you — IROC runs structured STEM sessions alongside adventure activities like rock climbing, ziplining, archery, and team building. For kids who want more than a screen-based tech camp. Ages 6–17, June through August. One of the most well-rounded programs in the Irvine area.</p>
+
+<h2>🌲 Outdoor &amp; Nature Camps in Orange County</h2>
+
+<h3>Inside the Outdoors at Shipley Nature Center (Huntington Beach)</h3>
+<p>This is a hidden gem. Shipley Nature Center in Huntington Beach hosts classic outdoor day camps in June and throughout July, with themes like Campology, Adventures in the Wild, and Camp Castaway. It's an in-person nature immersion camp — hands-on, screen-free, and genuinely educational. Run by the OC Department of Education. Limited spots each week, so register early. <a href="https://www.insidetheoutdoors.org" target="_blank" rel="noopener noreferrer">insidetheoutdoors.org</a></p>
+
+<h3>Environmental Nature Center (Newport Beach)</h3>
+<p>The ENC runs nature-focused summer camps for younger kids centered on their 3.5-acre native plant sanctuary. It's a genuinely special setting — the kind of camp where your kid comes home covered in dirt and talking about beetles. Ages K–6th grade.</p>
+
+<h3>Ocean Institute (Dana Point)</h3>
+<p>One of the premier marine science programs in Southern California. Camps for ages 5–17 include time on boats, marine biology labs, and oceanography research. The overnight programs are particularly memorable for older kids (ages 10+). Member registration opens early February. <a href="https://www.ocean-institute.org" target="_blank" rel="noopener noreferrer">ocean-institute.org</a></p>
+
+<h3>OC Council Boy Scouts — Camp Wilderness (multiple locations)</h3>
+<p>The OC Boy Scouts runs summer camps with serious outdoor programming including shelter-building, archery, first aid, and wilderness survival across desert, mountain, and wetlands terrain themes. Ages 12–15 for the survival-focused tracks, younger options also available. <a href="https://www.ocbsa.org" target="_blank" rel="noopener noreferrer">ocbsa.org</a></p>
+
+<h3>Camp Oakes — YMCA (Big Bear)</h3>
+<p>Technically a sleepaway camp, but it consistently ranks among the best overnight options for OC families. Located in Big Bear, run by the YMCA, ages 8–17. If your kid is ready for their first overnight camp experience, this is a trustworthy, well-structured option with decades of history.</p>
+
+<h2>📍 Summer Camp Quick Picks by City</h2>
+
+<p>Not sure where to start? Here's the fastest path by city:</p>
+
+<ul>
+  <li><strong>Huntington Beach:</strong> Camp HB (city rec, best value) · Shipley Nature Center · YMCA HB · SCATS Gymnastics</li>
+  <li><strong>Newport Beach:</strong> Newport Sea Base · Environmental Nature Center · Camp Galileo · Boys &amp; Girls Club · Aspire Art Studios</li>
+  <li><strong>Irvine:</strong> Camp Galileo Irvine · IROC · Irvine Fine Arts Center · YMCA enrichment camps</li>
+  <li><strong>Tustin:</strong> Camp Galileo (accessible from Tustin) · YMCA Tustin-area locations</li>
+  <li><strong>Garden Grove &amp; Fountain Valley:</strong> YMCA enrichment programs · City recreation department day camps (check city websites in March/April for sign-ups)</li>
+</ul>
+
+<h2>Frequently Asked Questions</h2>
+
+<h3>When should I register for summer camps in Orange County?</h3>
+<p>As early as possible — ideally February or March. City recreation programs and popular specialty camps like Newport Sea Base and Camp Galileo often fill their best weeks by April. That said, most programs have openings well into May and June, especially for August sessions.</p>
+
+<h3>Are there free or low-cost summer camps in Orange County?</h3>
+<p>Yes. City-run programs through Huntington Beach, Irvine, and Tustin Parks &amp; Recreation are significantly cheaper than private camps, often $150–$300 per week. The Boys &amp; Girls Club also offers sliding-scale pricing. Look for "scholarship" options on YMCA registrations — the Y doesn't advertise it heavily, but financial assistance is available.</p>
+
+<h3>What age groups do most OC summer camps serve?</h3>
+<p>Most day camps serve K–6th grade (roughly ages 5–12). Teen-specific programs for grades 6–8 are offered by the YMCA, OC BSA, and IROC. For the youngest kids (ages 3–5), YMCA enrichment camps and Camp HB are the most inclusive options.</p>
+
+<h3>Do OC summer camps require kids to be vaccinated?</h3>
+<p>Policies vary by program. City-run and YMCA camps generally follow local school district guidelines. Specialty and private camps set their own policies. Check the individual program's registration FAQ — it's usually answered there.</p>
+
+<h2>Stay in the Loop</h2>
+
+<p>Summer camp sign-ups move fast. We update our <a href="/events">OC events calendar</a> every week with new openings, registration dates, and local family activities — <a href="/signup">subscribe for free</a> and we'll send them straight to your inbox.</p>
+    `,
+  },
+
+  // ─────────────────────────────────────────────────────────────────
   // 1. Sleep Training
   // ─────────────────────────────────────────────────────────────────
   {
@@ -37,7 +167,7 @@ export const SEED_RESOURCES: SeedResource[] = [
     category: 'sleep',
     access_level: 'free',
     status: 'published',
-    featured: true,
+    featured: false,
     read_time_minutes: 8,
     hero_image_url: null,
     meta_title: 'How to Sleep Train Your Baby | whatwedonowmama',
