@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
@@ -121,10 +122,15 @@ export default async function HomePage() {
 
             {/* Right: Circular image + floating stat cards */}
             <div className="flex-shrink-0 relative w-72 h-72 md:w-80 md:h-80">
-              <div className="w-full h-full rounded-full bg-brand-lavender/20 border-4 border-white/20 overflow-hidden flex items-center justify-center">
-                <div className="w-full h-full bg-gradient-to-br from-brand-coral/30 via-brand-gold/20 to-brand-lavender/30 flex items-center justify-center">
-                  <span className="text-7xl select-none">👩‍👧</span>
-                </div>
+              <div className="w-full h-full rounded-full border-4 border-white/20 overflow-hidden relative shadow-2xl">
+                <Image
+                  src="https://images.unsplash.com/photo-1484665754804-74b091211472?auto=format&fit=crop&w=640&h=640&q=85"
+                  alt="Mom lifting her laughing child up in the air outdoors"
+                  fill
+                  priority
+                  className="object-cover object-center"
+                  sizes="320px"
+                />
               </div>
               <div className="absolute -top-2 -left-6 bg-white rounded-2xl shadow-lg px-4 py-3 flex items-center gap-2">
                 <span className="text-xl">📅</span>
