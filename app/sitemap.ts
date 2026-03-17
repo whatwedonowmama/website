@@ -1,6 +1,8 @@
 import { MetadataRoute } from 'next'
 import { FARMERS_MARKETS } from '@/lib/farmers-markets'
 import { createServiceClient } from '@/lib/supabase/server'
+import { SEED_CRAFTS } from '@/lib/seed-crafts'
+import { SEED_RESOURCES } from '@/lib/seed-resources'
 
 const BASE_URL = 'https://whatwedonowmama.com'
 
@@ -11,6 +13,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE_URL}/events`,                           priority: 0.9,  changeFrequency: 'daily'   },
     { url: `${BASE_URL}/orange-county-farmers-market`,     priority: 0.9,  changeFrequency: 'weekly'  },
     { url: `${BASE_URL}/resources`,                        priority: 0.8,  changeFrequency: 'weekly'  },
+    { url: `${BASE_URL}/arts-crafts`,                      priority: 0.8,  changeFrequency: 'weekly'  },
+    { url: `${BASE_URL}/join`,                             priority: 0.7,  changeFrequency: 'monthly' },
     { url: `${BASE_URL}/about`,                            priority: 0.6,  changeFrequency: 'monthly' },
     { url: `${BASE_URL}/signup`,                           priority: 0.7,  changeFrequency: 'monthly' },
     { url: `${BASE_URL}/login`,                            priority: 0.4,  changeFrequency: 'monthly' },
@@ -75,5 +79,32 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // DB unavailable at build time — skip dynamic resource pages
   }
 
-  return [...staticPages, ...farmersMarketPages, ...eventPages, ...resourcePages]
+  // ── Seed resource pages (static fallback articles) ───────────────────────
+  const seedResourcePages: MetadataRoute.Sitemap = SEED_RESOURCES.map(r => ({
+    url: `${BASE_URL}/resources/${r.slug}`,
+    lastModified: new Date(r.updated_at),
+    priority: 0.75,
+    changeFrequency: 'monthly' as const,
+  }))
+
+  // ── Craft pages (static seed crafts) ─────────────────────────────────────
+  const craftPages: MetadataRoute.Sitemap = SEED_CRAFTS.map(c => ({
+    url: `${BASE_URL}/arts-crafts/${c.slug}`,
+    lastModified: new Date(c.updated_at),
+    priority: 0.75,
+    changeFrequency: 'monthly' as const,
+  }))
+
+  // Merge: DB resource pages override seed pages for the same slug
+  const dbResourceSlugs = new Set(resourcePages.map(r => r.url))
+  const dedupedSeedResources = seedResourcePages.filter(r => !dbResourceSlugs.has(r.url))
+
+  return [
+    ...staticPages,
+    ...farmersMarketPages,
+    ...eventPages,
+    ...resourcePages,
+    ...dedupedSeedResources,
+    ...craftPages,
+  ]
 }

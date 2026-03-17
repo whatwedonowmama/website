@@ -14,6 +14,15 @@ export const metadata: Metadata = {
   openGraph: {
     siteName: 'whatwedonowmama',
     locale: 'en_US',
+    type: 'website',
+    title: 'whatwedonowmama — Family Events & Resources for OC Parents',
+    description: 'Free weekly events, parenting guides, and a community for Orange County parents. No fluff. Just good stuff.',
+    url: 'https://whatwedonowmama.com',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'whatwedonowmama — Family Events & Resources for OC Parents',
+    description: 'Free weekly events, parenting guides, and a community for Orange County parents.',
   },
 }
 

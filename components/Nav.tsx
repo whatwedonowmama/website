@@ -27,6 +27,7 @@ export default function Nav() {
         <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-brand-navy">
           <Link href="/events" className="hover:text-brand-purple transition-colors">This Week in OC</Link>
           <Link href="/resources" className="hover:text-brand-purple transition-colors">Resources</Link>
+          <Link href="/arts-crafts" className="hover:text-brand-purple transition-colors">Arts &amp; Crafts</Link>
           <Link href="/orange-county-farmers-market" className="hover:text-brand-purple transition-colors">Farmers Markets</Link>
         </nav>
 
@@ -48,6 +49,7 @@ export default function Nav() {
         <div className="md:hidden bg-white border-t border-gray-100 px-4 py-4 flex flex-col gap-4">
           <Link href="/events" className="text-base font-medium py-2" onClick={() => setOpen(false)}>This Week in OC</Link>
           <Link href="/resources" className="text-base font-medium py-2" onClick={() => setOpen(false)}>Resources</Link>
+          <Link href="/arts-crafts" className="text-base font-medium py-2" onClick={() => setOpen(false)}>Arts &amp; Crafts</Link>
           <Link href="/orange-county-farmers-market" className="text-base font-medium py-2" onClick={() => setOpen(false)}>Farmers Markets</Link>
         </div>
       )}

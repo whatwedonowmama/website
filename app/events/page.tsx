@@ -8,6 +8,17 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'Family Events in Orange County This Week | whatwedonowmama',
   description: 'Free and affordable family events in Orange County, updated every week. Filter by city — Huntington Beach, Newport Beach, Tustin, and more.',
+  openGraph: {
+    title: 'Family Events in Orange County This Week',
+    description: 'Free and affordable family events in OC, updated every week — Huntington Beach, Newport Beach, Irvine, Tustin, and more.',
+    url: 'https://whatwedonowmama.com/events',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Family Events in Orange County This Week',
+    description: 'Free and affordable family events in OC, updated every week.',
+  },
 }
 
 // ── Category config ───────────────────────────────────────────────────────────

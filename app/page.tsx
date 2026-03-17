@@ -5,6 +5,17 @@ import { createClient } from '@/lib/supabase/server'
 export const metadata: Metadata = {
   title: 'Family Events & Parenting Resources for Orange County Parents | whatwedonowmama',
   description: 'Weekly family events and honest parenting resources for Orange County parents. Browse free events, farmers markets, and local guides. Free to join.',
+  openGraph: {
+    title: 'Family Events & Resources for Orange County Parents | whatwedonowmama',
+    description: 'Weekly family events and honest parenting resources for OC parents. Free events, farmers markets, and local guides.',
+    url: 'https://whatwedonowmama.com',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Family Events & Resources for Orange County Parents',
+    description: 'Weekly family events and honest parenting resources for OC parents. Free to join.',
+  },
 }
 import ResourceCard from '@/components/ResourceCard'
 import EventListItem from '@/components/EventListItem'

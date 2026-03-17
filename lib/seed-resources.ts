@@ -654,6 +654,255 @@ export const SEED_RESOURCES: SeedResource[] = [
     author: 'whatwedonowmama team',
     body: `<p>This article is available to Plus members. Join Plus for access to the full research breakdown, practical screen time frameworks for each age, and our OC parent discussion thread on this topic.</p>`,
   },
+
+  // ─────────────────────────────────────────────────────────────────
+  // Free Things to Do in OC with Kids
+  // ─────────────────────────────────────────────────────────────────
+  {
+    id: 'seed-free-oc',
+    slug: 'free-things-to-do-in-orange-county-with-kids',
+    title: 'Free Things to Do in Orange County with Kids',
+    excerpt:
+      'Orange County doesn\'t have to mean expensive. We\'ve rounded up the best genuinely free activities for kids — beaches, nature centers, splash pads, and more.',
+    category: 'oc-guides',
+    access_level: 'free',
+    status: 'published',
+    featured: false,
+    read_time_minutes: 7,
+    hero_image_url: null,
+    meta_title: 'Free Things to Do in Orange County with Kids | whatwedonowmama',
+    meta_description:
+      'The best free activities for kids in Orange County — from beaches and nature centers to farmers markets and library events. Updated for 2026.',
+    published_at: '2026-03-17T08:00:00Z',
+    created_at: '2026-03-17T08:00:00Z',
+    updated_at: '2026-03-17T08:00:00Z',
+    tags: ['Free', 'OC Guide', 'Activities', 'Outdoors', 'Budget'],
+    author: 'whatwedonowmama team',
+    body: `
+<p class="lead">Orange County has a reputation for being expensive — and okay, some of it is earned. But there are genuinely great free activities for families here if you know where to look. This is our running list.</p>
+
+<p>We update this guide regularly as new spots open and old favorites change. Everything below is completely free (no entry fee, no required reservation for the core activity).</p>
+
+<h2>🏖️ Beaches — Always Free</h2>
+
+<p>The OC coastline is your biggest free resource. Beach access is free at every city beach in Orange County — there's no charge to walk on the sand. The main cost is parking, and even that can be avoided with some planning.</p>
+
+<h3>Bolsa Chica State Beach (Huntington Beach)</h3>
+<p>One of the widest, most family-friendly stretches of beach in the county. Fire rings are available on a first-come basis — a summer evening fire with kids is completely free as long as you bring your own wood. Parking is the only cost, and you can often find street parking on Pacific Coast Highway.</p>
+
+<h3>Huntington City Beach</h3>
+<p>Right in the heart of Surf City, walking distance from the pier. Ideal for younger kids — the waves tend to be gentler near the pier. Free to access; paid metered lots nearby, but street parking in residential areas is free and just a short walk.</p>
+
+<h3>Crystal Cove State Park Beaches</h3>
+<p>Three separate beach entrances — Reef Point, Los Trancos, and Pelican Point — each with free beach access on foot. The tide pools at the northern end are some of the best in SoCal. Parking has a fee, but you can park in the neighborhood above and walk down.</p>
+
+<h3>Dana Point Harbor</h3>
+<p>The harbor area is free to walk and explore. Kids love watching the boats come in and out. The Marine Institute nearby often has free educational displays on the exterior, and the whale watching viewing area is free.</p>
+
+<h2>🌿 Nature Centers &amp; Outdoor Spaces</h2>
+
+<h3>Bolsa Chica Ecological Reserve (Huntington Beach)</h3>
+<p>Free wildlife preserve right next to PCH. A two-mile loop trail around the wetlands — you'll spot egrets, herons, pelicans, and in the right season, hundreds of migratory birds. No entry fee, ever. The footbridge view is particularly good for kids who like spotting animals. Parking directly off PCH is free.</p>
+
+<h3>Shipley Nature Center (Huntington Beach)</h3>
+<p>Located inside Huntington Central Park, this is a 18-acre wildlife sanctuary with walking trails, a native plant garden, and interpretive exhibits. Completely free, and a genuinely lovely place to spend a morning with young kids. The duck ponds nearby are a big hit.</p>
+
+<h3>Environmental Nature Center (Newport Beach)</h3>
+<p>A 3.5-acre garden of native California plants with educational trails, a butterfly garden, and stream habitats. Admission is free most days (small fee for some special programs). Check their calendar at encnewport.org for free family Saturdays and guided walks.</p>
+
+<h3>Tucker Wildlife Sanctuary (Orange)</h3>
+<p>Run by Cal State Fullerton, this small nature sanctuary in Modjeska Canyon offers free self-guided hikes through riparian and chaparral habitats. A hummingbird observation porch is a highlight — multiple species visit year-round. Free parking, free entry.</p>
+
+<h3>O'Neill Regional Park (Trabuco Canyon)</h3>
+<p>The hiking trails at O'Neill are free to use on foot (day use parking fee applies if you drive in, but you can enter on foot or bike at no charge). The creek trail is a favorite for younger kids — shaded, flat, and often has water running.</p>
+
+<h2>💦 Splash Pads &amp; Water Play (Free)</h2>
+
+<p>Several OC parks have free splash pads — no swim lessons required, no pool entry fee, just turn up and let them get wet.</p>
+
+<h3>Huntington Central Park Spray Ground</h3>
+<p>The splash pad area in Huntington Central Park near Goldenwest/Slater is completely free. It typically runs from late spring through early fall during daytime hours. Popular with the stroller crowd.</p>
+
+<h3>Craig Regional Park Spray Zone (Fullerton)</h3>
+<p>Free spray ground open during warm weather months. Large grass areas nearby for picnicking. No fee, no reservation needed.</p>
+
+<h3>Irvine Great Park — Water Play</h3>
+<p>The Irvine Great Park has a splash pad area that is free to use. The park itself is one of the best free family destinations in OC — there's also a free carousel, a free farm with animals, and open green space.</p>
+
+<h2>🎪 Irvine Great Park — Free Activities</h2>
+
+<p>This deserves its own section because there is genuinely a lot to do here for free:</p>
+
+<ul>
+  <li><strong>Free carousel rides</strong> for kids (runs on weekends)</li>
+  <li><strong>Free petting farm</strong> with chickens, goats, and seasonal animals</li>
+  <li><strong>Free tethered balloon rides</strong> (wait times can be long on weekends)</li>
+  <li><strong>Free open fields</strong> for kite flying, running, picnics</li>
+  <li><strong>Free farmers market</strong> on Saturdays (you don't have to buy anything)</li>
+</ul>
+
+<p>The balloon has an occasional small fee depending on the day — check the Great Park website before going. Everything else listed is reliably free. <a href="https://www.cityofirvine.org/orange-county-great-park" target="_blank" rel="noopener noreferrer">cityofirvine.org</a></p>
+
+<h2>📚 Free Library Programs</h2>
+
+<p>Every branch of the Orange County Public Library system runs free programming for kids. These are consistently underused and worth knowing about:</p>
+
+<ul>
+  <li><strong>Story time</strong> for babies, toddlers, and preschoolers — most branches offer at least 2–3 sessions per week</li>
+  <li><strong>Summer Reading Program</strong> — runs June through August, free prizes, free events</li>
+  <li><strong>STEM activities and craft programs</strong> — check your local branch calendar</li>
+  <li><strong>Free passes</strong> to museums like the Discovery Cube — many library branches offer them on a first-come checkout basis</li>
+</ul>
+
+<p>Check ocpl.org for your nearest branch and their event calendar. City library systems (Huntington Beach, Irvine, Newport Beach, Anaheim) also run their own free programming separately.</p>
+
+<h2>🛍️ Farmers Markets (Free to Browse)</h2>
+
+<p>Walking a farmers market with kids is completely free — and it's a genuinely great Saturday activity. Our <a href="/events">OC events calendar</a> lists all the major weekly farmers markets in the county with current dates and locations.</p>
+
+<p>A few favorites:</p>
+
+<ul>
+  <li><strong>Irvine Great Park Farmers Market</strong> — Saturdays, large and family-friendly</li>
+  <li><strong>Laguna Beach Thursday Farmers Market</strong> — smaller and walkable</li>
+  <li><strong>Huntington Beach Downtown Farmers Market</strong> — Fridays, close to the beach</li>
+</ul>
+
+<h2>🏛️ Free Museum Days &amp; Nights</h2>
+
+<p>Several OC museums have free admission days or specific free programs worth knowing:</p>
+
+<ul>
+  <li><strong>Bowers Museum (Santa Ana)</strong> — free admission on the first Sunday of every month for Orange County residents</li>
+  <li><strong>Discovery Cube OC (Santa Ana)</strong> — not typically free, but check for free library passes (above) and periodic free community days</li>
+  <li><strong>Laguna Art Museum</strong> — free admission on the first Thursday evening of each month</li>
+  <li><strong>UCI Arboretum</strong> — free, open to the public most weekdays and weekends</li>
+</ul>
+
+<h2>Quick Reference by City</h2>
+
+<ul>
+  <li><strong>Huntington Beach:</strong> Bolsa Chica Reserve · Shipley Nature Center · Central Park Spray Ground · City Beach</li>
+  <li><strong>Newport Beach:</strong> ENC · Crystal Cove (foot access) · Upper Newport Bay</li>
+  <li><strong>Irvine:</strong> Great Park (balloon, farm, carousel, splash pad) · UCI Arboretum</li>
+  <li><strong>Dana Point:</strong> Harbor walk · Doheny State Beach (foot access free)</li>
+  <li><strong>Orange / Santa Ana:</strong> Tucker Wildlife Sanctuary · Bowers Museum (first Sunday)</li>
+</ul>
+
+<h2>Stay in the Loop</h2>
+
+<p>We publish free and low-cost family events every week in our <a href="/events">OC events calendar</a>. <a href="/signup">Subscribe free</a> and we'll send you the best of the week every Friday — no spam, just good stuff for OC families.</p>
+    `,
+  },
+
+  // ─────────────────────────────────────────────────────────────────
+  // Best Birthday Party Venues in OC
+  // ─────────────────────────────────────────────────────────────────
+  {
+    id: 'seed-bday',
+    slug: 'best-birthday-party-venues-orange-county',
+    title: 'Best Birthday Party Venues in Orange County',
+    excerpt:
+      'From hands-on art studios to trampoline parks and private beach fire rings — the honest guide to birthday party venues in OC, organized by vibe and budget.',
+    category: 'oc-guides',
+    access_level: 'free',
+    status: 'published',
+    featured: false,
+    read_time_minutes: 8,
+    hero_image_url: null,
+    meta_title: 'Best Birthday Party Venues in Orange County | whatwedonowmama',
+    meta_description:
+      'The best birthday party venues for kids in Orange County — from trampoline parks and art studios to beach parties and science museums. Organized by age and budget.',
+    published_at: '2026-03-17T08:00:00Z',
+    created_at: '2026-03-17T08:00:00Z',
+    updated_at: '2026-03-17T08:00:00Z',
+    tags: ['Birthday', 'OC Guide', 'Activities', 'Parties'],
+    author: 'whatwedonowmama team',
+    body: `
+<p class="lead">Planning a birthday party in OC can feel overwhelming fast. We've done the research so you can skip straight to the shortlist.</p>
+
+<p>This guide is organized by vibe — because a great venue for a 4-year-old is not the same as what works for a 10-year-old, and not everyone has the same budget. We've included honest notes on cost where we know them.</p>
+
+<h2>🎨 Arts &amp; Creative Parties</h2>
+
+<h3>Color Me Mine (multiple OC locations)</h3>
+<p>A classic for a reason. Kids paint their own ceramics — plates, mugs, figurines — and they come out glazed and ready to take home. Color Me Mine has locations in Irvine, Laguna Niguel, and other OC cities. Party packages typically include studio time, ceramic pieces, and glazing/firing. Great for ages 4 and up. Not the cheapest option, but the take-home keepsake is a big hit with parents and kids alike.</p>
+
+<h3>Pinot's Palette / Wine &amp; Design Studios (for parent parties too)</h3>
+<p>If you're doing a combined adult-kid event or a parent-focused birthday, the painting studio format works well. Many locations offer kids' birthday options. Check for OC locations in Irvine and Huntington Beach.</p>
+
+<h3>Pump It Up (Brea &amp; other locations)</h3>
+<p>Inflatable obstacle courses in a private, enclosed space — the whole venue is yours for the party. This is a reliable crowd-pleaser for ages 3–10. Prices vary but expect $350–$600+ for a party package depending on headcount and location.</p>
+
+<h2>🔬 Science &amp; STEM Parties</h2>
+
+<h3>Discovery Cube OC (Santa Ana)</h3>
+<p>The Discovery Cube hosts private birthday parties with a science theme — mad scientist activities, lab experiments, and access to the museum. Party packages include a dedicated party host and private party room. One of the best options if your kid is into science. Book well in advance — their weekend slots fill up fast.</p>
+
+<h3>Launch OC (Irvine)</h3>
+<p>A trampoline and obstacle course park with private party rooms. Good option for the 6–12 crowd. Party packages typically include jump time plus food/cake time in a private room. High energy, loud, and kids love it.</p>
+
+<h3>LEGOLAND California (Carlsbad — just outside OC)</h3>
+<p>Technically San Diego County, but many OC families make the trip for birthdays. LEGOLAND has a variety of birthday packages. Worth it if your kid is a serious LEGO fan — otherwise the drive and cost may not be worth it for a day trip.</p>
+
+<h2>🌊 Beach &amp; Outdoor Parties</h2>
+
+<h3>Bolsa Chica State Beach — Fire Ring Party</h3>
+<p>One of the most underrated OC birthday party ideas: reserve a fire ring at Bolsa Chica for a late-afternoon beach party. Fire ring reservations can be made through the state parks system. Bring s'mores supplies, a picnic dinner, and let the kids dig in the sand until the fire gets going. Affordable, memorable, and genuinely special. Best for ages 5+ and for families comfortable with open-air parties.</p>
+
+<h3>Newport Dunes Waterfront Resort</h3>
+<p>The lagoon area at Newport Dunes is calm and ideal for younger kids — not ocean waves, but protected waterfront. They host birthday parties with various packages. Rentable watercraft add to the fun for older kids. Premium pricing, but the setting is hard to beat.</p>
+
+<h3>Dana Point Harbor — Kayaking / Paddleboarding Party</h3>
+<p>Several rental outfitters at Dana Point Harbor offer private birthday party packages that include kayak or SUP instruction and rental time on the harbor. Works well for kids 7+ who are comfortable near water. Unique, affordable compared to some venues, and a great way to spend a birthday morning.</p>
+
+<h2>🏃 Active / High-Energy Parties</h2>
+
+<h3>Sky Zone Trampoline Park (multiple OC locations)</h3>
+<p>Trampoline park with private party room options. Party packages include jump time, party host, and pizza/food options. Consistently good reviews for birthday parties from OC parents. Loud and chaotic in the best way for the 5–12 age range.</p>
+
+<h3>K1 Speed (Irvine &amp; Anaheim)</h3>
+<p>Indoor go-kart racing with private party packages. Best for ages 8+ (there are height and age requirements). A genuinely fun option for older kids who want something more exciting than the typical birthday. Packages typically include racing sessions, trophies, and a private party area.</p>
+
+<h3>Rockin' Jump (Tustin)</h3>
+<p>Another strong trampoline park option in South OC. Private party rooms, dedicated party host, and various jump and dodge ball court access. Similar pricing and format to Sky Zone — check both for current availability before deciding.</p>
+
+<h2>🎭 Experience / Entertainment Parties</h2>
+
+<h3>Medieval Times (Buena Park)</h3>
+<p>Dinner and a jousting show — and yes, they do birthday packages. It's theatrical, fun, and the food-with-your-hands gimmick goes over well with kids. Works best for ages 6–12. Book the birthday package in advance; they'll announce your child's name during the show.</p>
+
+<h3>Dave &amp; Buster's (multiple OC locations)</h3>
+<p>If your kid is into video games and arcade games, D&amp;B has private party packages. The "power card" format (preloaded game credits) works well for birthday groups. Not the cheapest, but kids in the 8–14 range generally love it.</p>
+
+<h3>Irvine Improv</h3>
+<p>For teen birthdays, the Irvine Improv occasionally runs teen-friendly shows and can accommodate group bookings. Not a traditional kids venue, but worth checking for the 13+ crowd who wants something different.</p>
+
+<h2>🏠 At-Home Party Vendors (They Come to You)</h2>
+
+<p>Sometimes the easiest birthday party is in your own backyard with a vendor who brings everything:</p>
+
+<ul>
+  <li><strong>Bounce house rental companies</strong> — dozens of OC vendors deliver, set up, and pick up inflatables for $150–$300</li>
+  <li><strong>Petting zoo / pony party companies</strong> — several OC vendors bring farm animals to your backyard. A memorable option for ages 2–7</li>
+  <li><strong>Mobile escape room companies</strong> — a handful of vendors operate mobile escape room trailers that park in front of your home. Great for 10+ crowds</li>
+  <li><strong>Art party companies</strong> — vendors bring all supplies and lead a guided art project at your home. Mess-free for you, creative for kids</li>
+</ul>
+
+<h2>💡 Tips for Booking OC Birthday Venues</h2>
+
+<ul>
+  <li><strong>Book 4–8 weeks out.</strong> Popular venues (Discovery Cube, Pump It Up, Sky Zone) fill up 6–8 weeks in advance for weekend slots, especially in spring and summer.</li>
+  <li><strong>Ask about weekday rates.</strong> Many venues offer significantly lower pricing for Friday afternoon or weekday birthday parties.</li>
+  <li><strong>Confirm the headcount policy.</strong> Some venues charge per guest, others have flat-fee packages. Get the exact per-head overage cost before you invite everyone.</li>
+  <li><strong>Ask what's included and what's not.</strong> Cake-cutting fees, corkage fees for outside food, and decoration restrictions vary a lot by venue.</li>
+</ul>
+
+<h2>Stay in the Loop</h2>
+
+<p>We post local family events and OC activity guides every week. Check our <a href="/events">events calendar</a> for current kids' events and <a href="/signup">subscribe free</a> to get the best of the week sent directly to your inbox.</p>
+    `,
+  },
 ]
 
 /** Look up a seed resource by slug */
