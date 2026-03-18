@@ -8,6 +8,9 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   const user = await getUser()
   if (!user) redirect('/login?redirect=/dashboard')
 
+  // Dashboard is for paid members only — free-tier users are sent to the join page
+  if (user.tier === 'free') redirect('/join?ref=dashboard')
+
   return (
     <div className="flex" style={{ minHeight: 'calc(100vh - 64px)' }}>
       {/* Sidebar — hidden on mobile, shown md+ */}

@@ -55,6 +55,14 @@ export async function GET(request: NextRequest) {
         // Non-fatal — getUser() fallback handles missing rows gracefully
       }
 
+      // If the user signed up intending to purchase a plan, send them back
+      // to /signup?plan=X so the page auto-detects they're logged in and
+      // kicks off Stripe checkout without showing the form again.
+      const intendedPlan = authUser.user_metadata?.intended_plan
+      if (intendedPlan === 'oc-insider' || intendedPlan === 'plus') {
+        return NextResponse.redirect(`${origin}/signup?plan=${intendedPlan}`)
+      }
+
       return NextResponse.redirect(`${origin}${next}?welcome=1`)
     }
   }

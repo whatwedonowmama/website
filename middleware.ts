@@ -50,7 +50,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // Redirect logged-in users away from auth pages
-  if (user && (path === '/login' || path === '/signup')) {
+  // NOTE: /signup is intentionally excluded here — authenticated users can visit
+  // /signup?plan=oc-insider or /signup?plan=plus to upgrade their account.
+  // The signup page itself handles the "already logged in" case.
+  if (user && path === '/login') {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)

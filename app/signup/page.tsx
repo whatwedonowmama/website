@@ -1,5 +1,5 @@
 'use client'
-import { Suspense, useState } from 'react'
+import { Suspense, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -11,6 +11,8 @@ function SignupForm() {
   const [error, setError]         = useState('')
   const [loading, setLoading]     = useState(false)
   const [needsConfirm, setNeedsConfirm] = useState(false)
+  // true while we're checking for an existing session on mount
+  const [checkingSession, setCheckingSession] = useState(true)
   const router       = useRouter()
   const searchParams = useSearchParams()
   const plan         = searchParams.get('plan') // 'plus' | 'oc-insider' | null
@@ -18,6 +20,62 @@ function SignupForm() {
   const isOCInsider = plan === 'oc-insider'
   const isPlus      = plan === 'plus'
   const isPaid      = isOCInsider || isPlus
+
+  // On mount: check whether the visitor is already logged in.
+  // • If logged in + has a paid plan → skip the form, go straight to Stripe.
+  // • If logged in + no plan → redirect to dashboard (they're already a member).
+  // • If not logged in → show the normal signup form.
+  useEffect(() => {
+    async function checkExistingSession() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (user) {
+        if (isPaid) {
+          // Already authenticated — jump straight to Stripe checkout
+          setLoading(true)
+          try {
+            const res = await fetch('/api/checkout', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: user.email, plan, returnUrl: window.location.href }),
+            })
+            const { url, error: checkoutError } = await res.json()
+            if (url) {
+              window.location.href = url
+              return
+            }
+            setError(checkoutError || 'Could not start checkout. Please try again.')
+            setLoading(false)
+          } catch {
+            setError('Could not start checkout. Please try again.')
+            setLoading(false)
+          }
+        } else {
+          // Logged in but no plan — send to dashboard
+          router.replace('/dashboard')
+          return
+        }
+      }
+
+      setCheckingSession(false)
+    }
+
+    checkExistingSession()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // While checking session (or redirecting), show a spinner so there's no flash of form
+  if (checkingSession || (loading && !error)) {
+    return (
+      <div className="card flex flex-col items-center gap-4 text-center py-12">
+        <div className="w-8 h-8 border-4 border-brand-purple border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-gray-500">
+          {isPaid ? 'Taking you to checkout…' : 'Loading…'}
+        </p>
+      </div>
+    )
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -34,7 +92,14 @@ function SignupForm() {
     const { data, error: authError } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { first_name: firstName } },
+      options: {
+        data: {
+          first_name: firstName,
+          // Store intended plan so the auth callback can resume checkout
+          // after email confirmation if confirmation is required.
+          intended_plan: plan ?? null,
+        },
+      },
     })
 
     if (authError) {
