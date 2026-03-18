@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Image from 'next/image'
 import { createClient } from '@/lib/supabase/server'
 
 export const metadata: Metadata = {
@@ -120,17 +119,102 @@ export default async function HomePage() {
               {/* ① Removed 'Free forever · No credit card needed' */}
             </div>
 
-            {/* Right: Circular image + floating stat cards */}
+            {/* Right: Circular illustration + floating stat cards */}
             <div className="flex-shrink-0 relative w-72 h-72 md:w-80 md:h-80">
-              <div className="w-full h-full rounded-full border-4 border-white/20 overflow-hidden relative shadow-2xl">
-                <Image
-                  src="https://images.unsplash.com/photo-1484665754804-74b091211472?auto=format&fit=crop&w=640&h=640&q=85"
-                  alt="Mom lifting her laughing child up in the air outdoors"
-                  fill
-                  priority
-                  className="object-cover object-center"
-                  sizes="320px"
-                />
+              <div className="w-full h-full rounded-full border-4 border-white/20 overflow-hidden relative shadow-2xl bg-gradient-to-br from-brand-purple/80 via-[#4a2d7a] to-brand-coral/60">
+                {/* Animated SVG silhouette — parent lifting child */}
+                <svg
+                  viewBox="0 0 320 320"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-full h-full"
+                  aria-label="Silhouette of a parent joyfully lifting their child"
+                  role="img"
+                >
+                  <defs>
+                    <radialGradient id="glow" cx="50%" cy="70%" r="50%">
+                      <stop offset="0%" stopColor="#F5C842" stopOpacity="0.25" />
+                      <stop offset="100%" stopColor="#F5C842" stopOpacity="0" />
+                    </radialGradient>
+                    <style>{`
+                      @keyframes float {
+                        0%, 100% { transform: translateY(0px); }
+                        50%       { transform: translateY(-8px); }
+                      }
+                      @keyframes sway {
+                        0%, 100% { transform: rotate(-3deg); }
+                        50%       { transform: rotate(3deg); }
+                      }
+                      @keyframes sparkle {
+                        0%, 100% { opacity: 0; transform: scale(0.5); }
+                        50%       { opacity: 1; transform: scale(1); }
+                      }
+                      .child-group {
+                        transform-origin: 160px 130px;
+                        animation: float 3s ease-in-out infinite;
+                      }
+                      .parent-group {
+                        transform-origin: 160px 220px;
+                        animation: sway 3s ease-in-out infinite;
+                      }
+                      .star1 { animation: sparkle 2.2s ease-in-out infinite 0s; }
+                      .star2 { animation: sparkle 2.2s ease-in-out infinite 0.7s; }
+                      .star3 { animation: sparkle 2.2s ease-in-out infinite 1.4s; }
+                    `}</style>
+                  </defs>
+
+                  {/* Background glow */}
+                  <circle cx="160" cy="200" r="140" fill="url(#glow)" />
+
+                  {/* Ground shadow */}
+                  <ellipse cx="160" cy="298" rx="55" ry="8" fill="rgba(0,0,0,0.18)" />
+
+                  {/* ── PARENT ── */}
+                  <g className="parent-group">
+                    {/* Body */}
+                    <rect x="133" y="210" width="54" height="76" rx="22" fill="#2D1B5E" />
+                    {/* Head */}
+                    <circle cx="160" cy="197" r="21" fill="#2D1B5E" />
+                    {/* Hair detail */}
+                    <path d="M139 193 Q160 176 181 193" fill="#1a0f3c" />
+                    {/* Left arm raised */}
+                    <path d="M133 225 Q108 190 118 155" stroke="#2D1B5E" strokeWidth="18" strokeLinecap="round" fill="none" />
+                    {/* Right arm raised */}
+                    <path d="M187 225 Q212 190 202 155" stroke="#2D1B5E" strokeWidth="18" strokeLinecap="round" fill="none" />
+                    {/* Left leg */}
+                    <rect x="137" y="278" width="20" height="18" rx="9" fill="#2D1B5E" />
+                    {/* Right leg */}
+                    <rect x="163" y="278" width="20" height="18" rx="9" fill="#2D1B5E" />
+                  </g>
+
+                  {/* ── CHILD (floating above parent's hands) ── */}
+                  <g className="child-group">
+                    {/* Body */}
+                    <rect x="141" y="105" width="38" height="46" rx="16" fill="#E85D4A" />
+                    {/* Head */}
+                    <circle cx="160" cy="93" r="17" fill="#E85D4A" />
+                    {/* Little arms out wide — happy! */}
+                    <path d="M141 118 Q122 112 116 120" stroke="#E85D4A" strokeWidth="11" strokeLinecap="round" fill="none" />
+                    <path d="M179 118 Q198 112 204 120" stroke="#E85D4A" strokeWidth="11" strokeLinecap="round" fill="none" />
+                    {/* Little legs */}
+                    <rect x="144" y="146" width="14" height="12" rx="6" fill="#E85D4A" />
+                    <rect x="162" y="146" width="14" height="12" rx="6" fill="#E85D4A" />
+                    {/* Joy-face */}
+                    <circle cx="154" cy="91" r="2.5" fill="rgba(255,255,255,0.85)" />
+                    <circle cx="166" cy="91" r="2.5" fill="rgba(255,255,255,0.85)" />
+                    <path d="M153 97 Q160 103 167 97" stroke="rgba(255,255,255,0.85)" strokeWidth="2" strokeLinecap="round" fill="none" />
+                  </g>
+
+                  {/* Sparkle stars */}
+                  <g className="star1">
+                    <text x="90" y="80" fontSize="18" fill="#F5C842">✦</text>
+                  </g>
+                  <g className="star2">
+                    <text x="218" y="68" fontSize="14" fill="#F5C842">✦</text>
+                  </g>
+                  <g className="star3">
+                    <text x="76" y="160" fontSize="11" fill="rgba(255,255,255,0.6)">✦</text>
+                  </g>
+                </svg>
               </div>
               <div className="absolute -top-2 -left-6 bg-white rounded-2xl shadow-lg px-4 py-3 flex items-center gap-2">
                 <span className="text-xl">📅</span>
