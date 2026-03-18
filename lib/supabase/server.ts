@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { cache } from 'react'
 import type { User } from '../types'
 
 export async function createClient() {
@@ -28,8 +29,9 @@ export async function createClient() {
   )
 }
 
-// Get the current authenticated user + their profile
-export async function getUser(): Promise<User | null> {
+// Get the current authenticated user + their profile.
+// Wrapped with React cache() so layout + page share one DB call per request.
+export const getUser = cache(async (): Promise<User | null> => {
   const supabase = await createClient()
   const { data: { user: authUser } } = await supabase.auth.getUser()
   if (!authUser) return null
@@ -41,7 +43,7 @@ export async function getUser(): Promise<User | null> {
     .single()
 
   return data
-}
+})
 
 // Get user by ID using service role (for webhooks)
 export function createServiceClient() {

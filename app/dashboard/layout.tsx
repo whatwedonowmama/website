@@ -1,17 +1,15 @@
+import type { ReactNode } from 'react'
 import { getUser } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import DashboardSidebar from '@/components/DashboardSidebar'
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function DashboardLayout({ children }: { children: ReactNode }) {
+  // getUser is React-cached — shared with page.tsx, only one DB call per request
   const user = await getUser()
   if (!user) redirect('/login?redirect=/dashboard')
 
   return (
-    <div className="flex min-h-[calc(100vh-64px)]">
+    <div className="flex" style={{ minHeight: 'calc(100vh - 64px)' }}>
       {/* Sidebar — hidden on mobile, shown md+ */}
       <div className="hidden md:flex">
         <DashboardSidebar
@@ -23,7 +21,7 @@ export default async function DashboardLayout({
 
       {/* Main content */}
       <div className="flex-1 min-w-0 bg-gray-50">
-        {/* Mobile tier badge bar */}
+        {/* Mobile top bar */}
         <div className="md:hidden flex items-center gap-2 px-4 py-3 bg-white border-b border-gray-100 text-sm">
           <span className="font-semibold text-brand-navy truncate">
             {user.first_name ? `Hey, ${user.first_name}` : 'Dashboard'}
@@ -41,12 +39,12 @@ export default async function DashboardLayout({
         </div>
 
         {/* Mobile nav tabs */}
-        <div className="md:hidden flex border-b border-gray-100 bg-white overflow-x-auto">
+        <nav className="md:hidden flex border-b border-gray-100 bg-white overflow-x-auto">
           {[
-            { href: '/dashboard',              label: 'Home',     icon: '🏠' },
-            { href: '/dashboard/early-events', label: 'Events',   icon: '📅' },
-            { href: '/dashboard/community',    label: 'Community',icon: '💬' },
-            { href: '/dashboard/resources',    label: 'Library',  icon: '📚' },
+            { href: '/dashboard',              label: 'Home',      icon: '🏠' },
+            { href: '/dashboard/early-events', label: 'Events',    icon: '📅' },
+            { href: '/dashboard/community',    label: 'Community', icon: '💬' },
+            { href: '/dashboard/resources',    label: 'Library',   icon: '📚' },
           ].map(item => (
             <a
               key={item.href}
@@ -57,7 +55,7 @@ export default async function DashboardLayout({
               <span>{item.label}</span>
             </a>
           ))}
-        </div>
+        </nav>
 
         <div className="p-4 md:p-8">
           {children}
