@@ -1,18 +1,19 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: 'Join OC Insider — Founding Member Waitlist | whatwedonowmama',
-  description: 'Be a Founding Member of OC Insider — the premium community for Orange County parents. Lock in your rate before we launch.',
+  title: 'Join OC Insider — Founding Member | whatwedonowmama',
+  description: 'Become a Founding Member of OC Insider — early events, the full resource library, and a private Discord community for OC parents. $49/year.',
   openGraph: {
-    title: 'Join OC Insider — Founding Member Waitlist',
-    description: 'Be a Founding Member of OC Insider — the premium community for OC parents. Lock in $49/year before we launch.',
+    title: 'Join OC Insider — Founding Member',
+    description: 'Early events, full resource library, and private Discord for OC parents. Lock in $49/year as a Founding Member.',
     url: 'https://whatwedonowmama.com/join',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Join OC Insider — Founding Member Waitlist',
-    description: 'Lock in the founding member rate before we launch.',
+    title: 'Join OC Insider — Founding Member',
+    description: 'Lock in the founding member rate — $49/year for early events, full library, and private Discord.',
   },
 }
 
@@ -30,7 +31,7 @@ const PERKS = [
   {
     emoji: '💬',
     title: 'Private Discord community',
-    body: 'Ask questions, share recs, and connect with other OC parents in a space that\'s actually friendly. No Facebook Groups nonsense.',
+    body: "Ask questions, share recs, and connect with other OC parents in a space that's actually friendly. No Facebook Groups nonsense.",
   },
   {
     emoji: '🏷️',
@@ -50,28 +51,25 @@ export default function JoinPage() {
 
       {/* ── HERO ── */}
       <section className="bg-brand-navy px-4 pt-16 pb-20 relative overflow-hidden">
-        {/* Decorative blobs */}
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-brand-coral/20 blur-3xl" />
           <div className="absolute bottom-0 -left-10 w-64 h-64 rounded-full bg-brand-gold/15 blur-3xl" />
         </div>
 
         <div className="relative max-w-2xl mx-auto text-center flex flex-col items-center gap-5">
-          {/* Badge */}
           <div className="inline-flex items-center gap-2 bg-brand-gold/20 border border-brand-gold/40 rounded-full px-4 py-1.5">
-            <span className="text-brand-gold text-sm font-semibold">✦ Founding Member Waitlist</span>
+            <span className="text-brand-gold text-sm font-semibold">✦ Founding Member — Limited Spots</span>
           </div>
 
           <h1 className="font-display text-4xl md:text-5xl font-bold text-white leading-tight">
-            Be first in.<br />
-            <span className="italic text-brand-coral">OC Insider</span> is coming.
+            Become an<br />
+            <span className="italic text-brand-coral">OC Insider.</span>
           </h1>
 
           <p className="text-brand-lavender/80 text-lg leading-relaxed max-w-lg">
-            We're building the premium tier of whatwedonowmama — a tighter community, richer content, and early access to everything. Join the waitlist now to lock in the Founding Member rate.
+            Early events, the full resource library, and a private community of OC parents who actually show up. Join now and lock in the Founding Member rate — forever.
           </p>
 
-          {/* Pricing callout */}
           <div className="flex items-baseline gap-3 mt-2">
             <span className="font-display text-4xl font-bold text-white">
               $49<span className="text-lg font-normal text-gray-400">/year</span>
@@ -82,25 +80,13 @@ export default function JoinPage() {
             </div>
           </div>
 
-          {/* Sign-up form */}
-          <form
-            action="/api/subscribe"
-            method="POST"
-            className="w-full max-w-sm flex flex-col sm:flex-row gap-3 mt-2"
+          <Link
+            href="/signup?plan=oc-insider"
+            className="mt-2 inline-flex items-center justify-center gap-2 bg-brand-gold text-brand-navy font-bold text-base px-8 py-4 rounded-2xl hover:bg-brand-gold/90 transition-colors shadow-lg"
           >
-            <input type="hidden" name="utm_campaign" value="founding-member-waitlist" />
-            <input
-              type="email"
-              name="email"
-              required
-              placeholder="your@email.com"
-              className="flex-1 rounded-2xl px-4 py-3.5 text-sm bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:border-brand-gold"
-            />
-            <button type="submit" className="btn-coral px-6 py-3.5 whitespace-nowrap font-semibold">
-              Join the waitlist →
-            </button>
-          </form>
-          <p className="text-gray-600 text-xs">No credit card. No commitment. We&apos;ll email you when we launch.</p>
+            Become a Founding Member →
+          </Link>
+          <p className="text-gray-500 text-xs">Billed annually · Cancel anytime · Secure checkout via Stripe</p>
         </div>
       </section>
 
@@ -153,14 +139,11 @@ export default function JoinPage() {
               ['Private Discord community', '—', '✓'],
               ['#founding-parents channel', '—', '✓'],
               ['Direct input on what we build', '—', '✓'],
-            ].map(([feature, free, plus]) => (
-              <div
-                key={feature}
-                className="grid grid-cols-3 border-t border-gray-100 text-sm"
-              >
+            ].map(([feature, free, insider]) => (
+              <div key={feature} className="grid grid-cols-3 border-t border-gray-100 text-sm">
                 <div className="p-4 pl-6 text-gray-700 font-medium">{feature}</div>
                 <div className="p-4 text-center text-gray-400">{free}</div>
-                <div className="p-4 text-center text-brand-purple font-semibold">{plus}</div>
+                <div className="p-4 text-center text-brand-purple font-semibold">{insider}</div>
               </div>
             ))}
           </div>
@@ -171,29 +154,18 @@ export default function JoinPage() {
       <section className="px-4 py-16 max-w-xl mx-auto text-center flex flex-col items-center gap-5">
         <p className="font-script text-brand-purple text-2xl">ready to be a founding member?</p>
         <h2 className="font-display text-2xl font-bold text-brand-navy leading-tight">
-          Lock in $49/year before we launch.
+          Lock in $49/year today.
         </h2>
         <p className="text-gray-500 text-sm max-w-sm">
-          Founding members lock in their rate permanently. Once we launch, new members pay full price.
+          Founding members lock in their rate permanently. Once spots fill, new members pay full price.
         </p>
-        <form
-          action="/api/subscribe"
-          method="POST"
-          className="w-full flex flex-col sm:flex-row gap-3"
+        <Link
+          href="/signup?plan=oc-insider"
+          className="inline-flex items-center justify-center gap-2 bg-brand-gold text-brand-navy font-bold text-base px-8 py-4 rounded-2xl hover:bg-brand-gold/90 transition-colors shadow-md w-full sm:w-auto"
         >
-          <input type="hidden" name="utm_campaign" value="founding-member-waitlist" />
-          <input
-            type="email"
-            name="email"
-            required
-            placeholder="your@email.com"
-            className="flex-1 rounded-2xl px-4 py-3.5 text-sm bg-white border border-gray-200 text-brand-navy placeholder-gray-400 focus:outline-none focus:border-brand-purple"
-          />
-          <button type="submit" className="btn-primary px-6 py-3.5 whitespace-nowrap">
-            Join the waitlist →
-          </button>
-        </form>
-        <p className="text-xs text-gray-400">No credit card. No commitment. Just your spot in line.</p>
+          Become a Founding Member →
+        </Link>
+        <p className="text-xs text-gray-400">Billed annually · Cancel anytime · Secure checkout via Stripe</p>
       </section>
 
     </div>

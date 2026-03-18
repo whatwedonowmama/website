@@ -30,15 +30,17 @@ export default async function DashboardPage({
   if (!user) redirect('/login?redirect=/dashboard')
 
   const { welcome, upgraded } = await searchParams
-  const isPlus = user.tier === 'plus'
-  const isTrial = user.subscription_status === 'trialing'
+  const isPlus    = user.tier === 'plus'
+  const isInsider = user.tier === 'oc-insider'
+  const isPaid    = isPlus || isInsider
+  const isTrial   = user.subscription_status === 'trialing'
 
   const supabase = await createClient()
   const { data: resources } = await supabase
     .from('resources')
     .select('*')
     .eq('status', 'published')
-    .eq('access_level', isPlus ? 'plus' : 'free')
+    .eq('access_level', isPaid ? 'plus' : 'free')
     .order('published_at', { ascending: false })
     .limit(3)
 
@@ -61,11 +63,22 @@ export default async function DashboardPage({
         <div className="bg-brand-lavender border border-brand-purple/30 rounded-xl px-5 py-4 mb-6 flex items-center gap-3">
           <span className="text-2xl">⭐</span>
           <div>
-            <p className="font-semibold text-brand-navy">You're a Plus member now!</p>
+            <p className="font-semibold text-brand-navy">You&apos;re a Plus member now!</p>
             <p className="text-sm text-gray-600">
               {isTrial
                 ? 'Your 7-day free trial has started. Discord access unlocks on your first payment (day 8).'
                 : 'Welcome to Plus. All resources and Discord access are unlocked.'}
+            </p>
+          </div>
+        </div>
+      )}
+      {welcome === 'insider' && (
+        <div className="bg-brand-navy border border-brand-gold/30 rounded-xl px-5 py-4 mb-6 flex items-center gap-3">
+          <span className="text-2xl">✦</span>
+          <div>
+            <p className="font-semibold text-brand-gold">Welcome, Founding Member!</p>
+            <p className="text-sm text-gray-400">
+              You&apos;re officially an OC Insider. Early events, the full library, and Discord access are all yours.
             </p>
           </div>
         </div>
@@ -78,9 +91,11 @@ export default async function DashboardPage({
             Hey {user.first_name || 'there'} 👋
           </h1>
           <div className="flex items-center gap-2 mt-1">
-            {isPlus
-              ? <span className="badge-plus">{isTrial ? '⭐ Plus (Trial)' : '⭐ Plus'}</span>
-              : <span className="badge-free">Free</span>}
+            {isInsider
+              ? <span className="inline-flex items-center gap-1 bg-brand-gold/20 text-brand-navy text-xs font-semibold px-2.5 py-1 rounded-full border border-brand-gold/40">✦ OC Insider</span>
+              : isPlus
+                ? <span className="badge-plus">{isTrial ? '⭐ Plus (Trial)' : '⭐ Plus'}</span>
+                : <span className="badge-free">Free</span>}
           </div>
         </div>
       </div>
@@ -120,29 +135,30 @@ export default async function DashboardPage({
       </section>
 
       {/* Community card */}
-      {isPlus && !isTrial ? (
+      {isPaid && !isTrial ? (
         <section className="card border-2 border-brand-purple/30 bg-brand-lavender/30 flex flex-col md:flex-row items-center gap-5 p-6">
           <div className="flex-1">
-            <p className="font-display text-xl font-bold text-brand-navy">You're in the community 🎉</p>
+            <p className="font-display text-xl font-bold text-brand-navy">You&apos;re in the community 🎉</p>
             <p className="text-sm text-gray-600 mt-1">3,000+ OC parents in Discord. Jump in anytime.</p>
           </div>
-          <Link href="/members/community" className="btn-primary shrink-0">Open Discord →</Link>
+          <Link href="/dashboard/community" className="btn-primary shrink-0">Open Discord →</Link>
+        </section>
+      ) : isPaid && isTrial ? (
+        <section className="card border border-gray-200 flex flex-col md:flex-row items-center gap-5 p-6">
+          <div className="flex-1">
+            <p className="font-display text-xl font-bold text-brand-navy">Discord unlocks when your trial ends</p>
+            <p className="text-sm text-gray-600 mt-1">Your trial is active. On day 8, Discord access unlocks automatically.</p>
+          </div>
         </section>
       ) : (
         <section className="card border border-gray-200 flex flex-col md:flex-row items-center gap-5 p-6">
           <div className="flex-1">
-            <p className="font-display text-xl font-bold text-brand-navy">
-              {isTrial ? 'Discord unlocks when you become a paying member' : '3,000+ OC parents are in there.'}
-            </p>
-            <p className="text-sm text-gray-600 mt-1">
-              {isTrial
-                ? 'Your trial is active. On day 8 when your card is charged, Discord access unlocks automatically.'
-                : 'Real talk, no judgment. The Discord community is a Plus benefit.'}
-            </p>
+            <p className="font-display text-xl font-bold text-brand-navy">3,000+ OC parents are in there.</p>
+            <p className="text-sm text-gray-600 mt-1">Real talk, no judgment. Community is an OC Insider perk.</p>
           </div>
-          {!isTrial && (
-            <Link href="/signup?plan=plus" className="btn-primary shrink-0">Go Plus for $7/mo →</Link>
-          )}
+          <Link href="/join" className="bg-brand-gold text-brand-navy font-bold px-5 py-3 rounded-2xl hover:bg-brand-gold/90 transition-colors shrink-0 text-sm">
+            Become a Founding Member ✦
+          </Link>
         </section>
       )}
     </div>

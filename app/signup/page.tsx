@@ -13,7 +13,11 @@ function SignupForm() {
   const [needsConfirm, setNeedsConfirm] = useState(false)
   const router       = useRouter()
   const searchParams = useSearchParams()
-  const plan         = searchParams.get('plan')
+  const plan         = searchParams.get('plan') // 'plus' | 'oc-insider' | null
+
+  const isOCInsider = plan === 'oc-insider'
+  const isPlus      = plan === 'plus'
+  const isPaid      = isOCInsider || isPlus
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -41,19 +45,19 @@ function SignupForm() {
       return
     }
 
-    // If no session, Supabase sent a confirmation email — show check-your-email screen
+    // If no session, Supabase sent a confirmation email
     if (!data.session) {
       setNeedsConfirm(true)
       setLoading(false)
       return
     }
 
-    // Session exists — user is immediately signed in (email confirmation disabled)
-    if (plan === 'plus') {
+    // Paid plan → send to Stripe checkout
+    if (isPaid) {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, returnUrl: window.location.href }),
+        body: JSON.stringify({ email, plan, returnUrl: window.location.href }),
       })
       const { url } = await res.json()
       window.location.href = url
@@ -70,7 +74,7 @@ function SignupForm() {
         <p className="text-4xl">📬</p>
         <h2 className="font-display text-xl font-bold text-brand-navy">Check your email</h2>
         <p className="text-sm text-gray-600">
-          We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account and get into your dashboard.
+          We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account, then you&apos;ll continue to checkout.
         </p>
         <p className="text-xs text-gray-400">Check your spam folder if you don&apos;t see it within a minute.</p>
       </div>
@@ -79,9 +83,16 @@ function SignupForm() {
 
   return (
     <>
-      {plan === 'plus' && (
+      {/* Plan context banners */}
+      {isOCInsider && (
+        <div className="bg-brand-navy border border-brand-gold/30 rounded-xl px-4 py-3 mb-5 text-sm text-center">
+          <p className="text-brand-gold font-semibold">✦ OC Insider — Founding Member</p>
+          <p className="text-gray-300 mt-0.5">$49/year · Early events · Full library · Discord access</p>
+        </div>
+      )}
+      {isPlus && (
         <div className="bg-brand-lavender border border-brand-purple/30 rounded-xl px-4 py-3 mb-5 text-sm text-brand-navy text-center">
-          Plus: All resources + Discord community &middot; 7-day free trial
+          Plus: All resources + Discord community · 7-day free trial
         </div>
       )}
 
@@ -118,8 +129,18 @@ function SignupForm() {
           <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
         )}
 
-        <button type="submit" disabled={loading} className="btn-primary w-full justify-center mt-1">
-          {loading ? 'Creating account...' : plan === 'plus' ? 'Continue to checkout' : 'Create free account'}
+        <button
+          type="submit"
+          disabled={loading}
+          className={isOCInsider ? 'w-full justify-center mt-1 bg-brand-gold text-brand-navy font-bold py-3 px-6 rounded-2xl hover:bg-brand-gold/90 transition-colors' : 'btn-primary w-full justify-center mt-1'}
+        >
+          {loading
+            ? 'Creating account...'
+            : isOCInsider
+              ? 'Continue to secure checkout →'
+              : isPlus
+                ? 'Continue to checkout'
+                : 'Create free account'}
         </button>
 
         <p className="text-xs text-center text-gray-400">
@@ -160,13 +181,27 @@ export default function SignupPage() {
 function SignupPageTitle() {
   const searchParams = useSearchParams()
   const plan = searchParams.get('plan')
+
+  const titles: Record<string, { heading: string; sub: string }> = {
+    'oc-insider': {
+      heading: 'Become an OC Insider',
+      sub:     'Founding Member rate · $49/year · cancel anytime',
+    },
+    'plus': {
+      heading: 'Start your Plus trial',
+      sub:     '7 days free · $7/mo after · cancel anytime',
+    },
+  }
+
+  const t = plan ? titles[plan] : null
+
   return (
     <>
       <h1 className="font-display text-2xl font-bold text-brand-navy mt-4">
-        {plan === 'plus' ? 'Start your Plus trial' : 'Join the community'}
+        {t?.heading ?? 'Join the community'}
       </h1>
       <p className="text-gray-500 text-sm mt-1">
-        {plan === 'plus' ? '7 days free · $7/mo after · cancel anytime' : 'Free forever. No credit card needed.'}
+        {t?.sub ?? 'Free forever. No credit card needed.'}
       </p>
     </>
   )

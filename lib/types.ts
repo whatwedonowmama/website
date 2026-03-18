@@ -1,4 +1,4 @@
-export type UserTier = 'free' | 'plus'
+export type UserTier = 'free' | 'plus' | 'oc-insider'
 export type UserRole = 'member' | 'admin'
 export type ResourceCategory = 'sleep' | 'feeding' | 'development' | 'activities' | 'milestones' | 'oc-guides'
 

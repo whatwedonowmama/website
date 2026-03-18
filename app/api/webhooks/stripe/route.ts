@@ -34,40 +34,44 @@ export async function POST(request: NextRequest) {
     case 'checkout.session.completed': {
       const session = event.data.object as Stripe.Checkout.Session
       if (session.mode !== 'subscription') break
+
       const customerId     = session.customer as string
       const subscriptionId = session.subscription as string
       const userId         = session.metadata?.userId
+      const tier           = session.metadata?.tier === 'oc-insider' ? 'oc-insider' : 'plus'
+      // OC Insider has no trial — subscription is immediately active
+      const status         = tier === 'oc-insider' ? 'active' : 'trialing'
 
-      // Link customer to user
+      const fields = {
+        stripe_customer_id:     customerId,
+        stripe_subscription_id: subscriptionId,
+        subscription_status:    status,
+        tier,
+      }
+
       if (userId && userId !== 'pending') {
-        await supabase.from('users').update({
-          stripe_customer_id:     customerId,
-          stripe_subscription_id: subscriptionId,
-          subscription_status:    'trialing',
-          tier:                   'plus',
-        }).eq('id', userId)
+        await supabase.from('users').update(fields).eq('id', userId)
       } else if (session.customer_email) {
-        await supabase.from('users').update({
-          stripe_customer_id:     customerId,
-          stripe_subscription_id: subscriptionId,
-          subscription_status:    'trialing',
-          tier:                   'plus',
-        }).eq('email', session.customer_email)
+        await supabase.from('users').update(fields).eq('email', session.customer_email)
       }
       break
     }
 
     case 'customer.subscription.updated': {
-      const sub = event.data.object as Stripe.Subscription
-      const status   = sub.status
-      const endsAt   = sub.current_period_end
+      const sub    = event.data.object as Stripe.Subscription
+      const status = sub.status
+      const endsAt = sub.current_period_end
         ? new Date(sub.current_period_end * 1000).toISOString()
         : null
 
+      // Preserve oc-insider tier if the metadata says so
+      const isActive = ['active', 'trialing'].includes(status)
+      const tierFromMeta = sub.metadata?.tier === 'oc-insider' ? 'oc-insider' : 'plus'
+
       await updateUser(supabase, sub.customer as string, {
-        subscription_status:  status,
-        subscription_ends_at: endsAt,
-        tier: ['active', 'trialing'].includes(status) ? 'plus' : 'free',
+        subscription_status:    status,
+        subscription_ends_at:   endsAt,
+        tier:                   isActive ? tierFromMeta : 'free',
         stripe_subscription_id: sub.id,
       })
       break
