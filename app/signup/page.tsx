@@ -5,14 +5,15 @@ import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 
 function SignupForm() {
-  const [firstName, setFirstName] = useState('')
-  const [email, setEmail]         = useState('')
-  const [password, setPassword]   = useState('')
-  const [error, setError]         = useState('')
-  const [loading, setLoading]     = useState(false)
+  const [firstName,    setFirstName]    = useState('')
+  const [email,        setEmail]        = useState('')
+  const [password,     setPassword]     = useState('')
+  const [error,        setError]        = useState('')
+  const [loading,      setLoading]      = useState(false)
   const [needsConfirm, setNeedsConfirm] = useState(false)
-  // true while we're checking for an existing session on mount
+  // true while we check for an existing session on mount
   const [checkingSession, setCheckingSession] = useState(true)
+
   const router       = useRouter()
   const searchParams = useSearchParams()
   const plan         = searchParams.get('plan') // 'plus' | 'oc-insider' | null
@@ -21,10 +22,8 @@ function SignupForm() {
   const isPlus      = plan === 'plus'
   const isPaid      = isOCInsider || isPlus
 
-  // On mount: check whether the visitor is already logged in.
-  // • If logged in + has a paid plan → skip the form, go straight to Stripe.
-  // • If logged in + no plan → redirect to dashboard (they're already a member).
-  // • If not logged in → show the normal signup form.
+  // On mount: if the visitor is already logged in, skip account creation.
+  // Route them to /onboarding?plan=X (if they have a plan) or /dashboard.
   useEffect(() => {
     async function checkExistingSession() {
       const supabase = createClient()
@@ -32,30 +31,13 @@ function SignupForm() {
 
       if (user) {
         if (isPaid) {
-          // Already authenticated — jump straight to Stripe checkout
-          setLoading(true)
-          try {
-            const res = await fetch('/api/checkout', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: user.email, plan, returnUrl: window.location.href }),
-            })
-            const { url, error: checkoutError } = await res.json()
-            if (url) {
-              window.location.href = url
-              return
-            }
-            setError(checkoutError || 'Could not start checkout. Please try again.')
-            setLoading(false)
-          } catch {
-            setError('Could not start checkout. Please try again.')
-            setLoading(false)
-          }
+          // Already authenticated — skip form, go to benefits/payment page
+          router.replace(`/onboarding?plan=${plan}`)
         } else {
-          // Logged in but no plan — send to dashboard
+          // Logged in, no plan — already a member
           router.replace('/dashboard')
-          return
         }
+        return
       }
 
       setCheckingSession(false)
@@ -65,14 +47,12 @@ function SignupForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // While checking session (or redirecting), show a spinner so there's no flash of form
-  if (checkingSession || (loading && !error)) {
+  // Show spinner while checking session (avoids flash of form)
+  if (checkingSession) {
     return (
       <div className="card flex flex-col items-center gap-4 text-center py-12">
         <div className="w-8 h-8 border-4 border-brand-purple border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-gray-500">
-          {isPaid ? 'Taking you to checkout…' : 'Loading…'}
-        </p>
+        <p className="text-sm text-gray-500">Loading…</p>
       </div>
     )
   }
@@ -95,8 +75,8 @@ function SignupForm() {
       options: {
         data: {
           first_name: firstName,
-          // Store intended plan so the auth callback can resume checkout
-          // after email confirmation if confirmation is required.
+          // Store the intended plan in metadata so the auth callback can
+          // resume the correct flow after email confirmation.
           intended_plan: plan ?? null,
         },
       },
@@ -110,42 +90,43 @@ function SignupForm() {
       return
     }
 
-    // If no session, Supabase sent a confirmation email
+    // Email confirmation required — session not created yet
     if (!data.session) {
       setNeedsConfirm(true)
       setLoading(false)
       return
     }
 
-    // Paid plan → send to Stripe checkout
+    // Account created + session active.
+    // Paid plan → go to the benefits/payment page.
+    // Free → go to home (dashboard is for paid members only).
     if (isPaid) {
-      const res = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, plan, returnUrl: window.location.href }),
-      })
-      const { url } = await res.json()
-      window.location.href = url
-      return
+      router.push(`/onboarding?plan=${plan}`)
+    } else {
+      router.push('/')
     }
-
-    router.push('/dashboard?welcome=1')
-    router.refresh()
   }
 
+  // ── Confirmation pending ─────────────────────────────────────────
   if (needsConfirm) {
     return (
       <div className="card flex flex-col items-center gap-4 text-center py-8">
         <p className="text-4xl">📬</p>
         <h2 className="font-display text-xl font-bold text-brand-navy">Check your email</h2>
         <p className="text-sm text-gray-600">
-          We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account, then you&apos;ll continue to checkout.
+          We sent a confirmation link to <strong>{email}</strong>.{' '}
+          {isPaid
+            ? "Click it to verify your account, then we'll take you to checkout."
+            : 'Click it to activate your account.'}
         </p>
-        <p className="text-xs text-gray-400">Check your spam folder if you don&apos;t see it within a minute.</p>
+        <p className="text-xs text-gray-400">
+          Check your spam folder if you don&apos;t see it within a minute.
+        </p>
       </div>
     )
   }
 
+  // ── Signup form ──────────────────────────────────────────────────
   return (
     <>
       {/* Plan context banners */}
@@ -157,7 +138,7 @@ function SignupForm() {
       )}
       {isPlus && (
         <div className="bg-brand-lavender border border-brand-purple/30 rounded-xl px-4 py-3 mb-5 text-sm text-brand-navy text-center">
-          Plus: All resources + Discord community · 7-day free trial
+          Plus: All resources + Discord community · 7-day free trial, then $7/mo
         </div>
       )}
 
@@ -197,14 +178,18 @@ function SignupForm() {
         <button
           type="submit"
           disabled={loading}
-          className={isOCInsider ? 'w-full justify-center mt-1 bg-brand-gold text-brand-navy font-bold py-3 px-6 rounded-2xl hover:bg-brand-gold/90 transition-colors' : 'btn-primary w-full justify-center mt-1'}
+          className={
+            isOCInsider
+              ? 'w-full justify-center mt-1 bg-brand-gold text-brand-navy font-bold py-3 px-6 rounded-2xl hover:bg-brand-gold/90 transition-colors disabled:opacity-60'
+              : 'btn-primary w-full justify-center mt-1 disabled:opacity-60'
+          }
         >
           {loading
-            ? 'Creating account...'
+            ? 'Creating account…'
             : isOCInsider
-              ? 'Continue to secure checkout →'
+              ? 'Create account & continue →'
               : isPlus
-                ? 'Continue to checkout'
+                ? 'Create account & start trial →'
                 : 'Create free account'}
         </button>
 
@@ -219,12 +204,15 @@ function SignupForm() {
   )
 }
 
+// ── Page shell ───────────────────────────────────────────────────────
 export default function SignupPage() {
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <Link href="/" className="font-display font-bold text-brand-purple text-2xl">whatwedonowmama</Link>
+          <Link href="/" className="font-display font-bold text-brand-purple text-2xl">
+            whatwedonowmama
+          </Link>
           <Suspense fallback={<div className="h-16" />}>
             <SignupPageTitle />
           </Suspense>
@@ -249,12 +237,12 @@ function SignupPageTitle() {
 
   const titles: Record<string, { heading: string; sub: string }> = {
     'oc-insider': {
-      heading: 'Become an OC Insider',
-      sub:     'Founding Member rate · $49/year · cancel anytime',
+      heading: 'Step 1 of 3 — Create your account',
+      sub:     'Then we\'ll show you your OC Insider perks before checkout.',
     },
     'plus': {
-      heading: 'Start your Plus trial',
-      sub:     '7 days free · $7/mo after · cancel anytime',
+      heading: 'Step 1 of 3 — Create your account',
+      sub:     'Then we\'ll start your free 7-day trial.',
     },
   }
 
@@ -262,7 +250,7 @@ function SignupPageTitle() {
 
   return (
     <>
-      <h1 className="font-display text-2xl font-bold text-brand-navy mt-4">
+      <h1 className="font-display text-xl font-bold text-brand-navy mt-4">
         {t?.heading ?? 'Join the community'}
       </h1>
       <p className="text-gray-500 text-sm mt-1">

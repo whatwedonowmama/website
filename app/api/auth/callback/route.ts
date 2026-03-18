@@ -34,12 +34,13 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      // Ensure a row exists in public.users — the DB trigger may not have fired
-      // (e.g. when email confirmation is enabled, the trigger fires on auth.users
-      //  insert but the anon client can't always read it back immediately).
-      try {
-        const { data: { user: authUser } } = await supabase.auth.getUser()
-        if (authUser) {
+      // Get the authenticated user so we can read their metadata
+      const { data: { user: authUser } } = await supabase.auth.getUser()
+
+      if (authUser) {
+        // Ensure a row exists in public.users — DB trigger may not have fired
+        // (e.g. when email confirmation is enabled and RLS is strict).
+        try {
           const service = createServiceClient()
           // INSERT … ON CONFLICT DO NOTHING — safe to call every time
           await service.from('users').insert({
@@ -49,20 +50,19 @@ export async function GET(request: NextRequest) {
             role:       'member',
             tier:       'free',
           }).select()
-          // If the row already exists, Supabase returns a 409 which we ignore below
+        } catch {
+          // Non-fatal — getUser() fallback handles missing rows gracefully
         }
-      } catch {
-        // Non-fatal — getUser() fallback handles missing rows gracefully
+
+        // If the user signed up intending to purchase a plan, send them to
+        // /onboarding?plan=X — that page shows the benefits and triggers Stripe.
+        const intendedPlan = authUser.user_metadata?.intended_plan
+        if (intendedPlan === 'oc-insider' || intendedPlan === 'plus') {
+          return NextResponse.redirect(`${origin}/onboarding?plan=${intendedPlan}`)
+        }
       }
 
-      // If the user signed up intending to purchase a plan, send them back
-      // to /signup?plan=X so the page auto-detects they're logged in and
-      // kicks off Stripe checkout without showing the form again.
-      const intendedPlan = authUser.user_metadata?.intended_plan
-      if (intendedPlan === 'oc-insider' || intendedPlan === 'plus') {
-        return NextResponse.redirect(`${origin}/signup?plan=${intendedPlan}`)
-      }
-
+      // No paid plan — send to the page specified by `next` (default: /dashboard)
       return NextResponse.redirect(`${origin}${next}?welcome=1`)
     }
   }
