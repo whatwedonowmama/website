@@ -18,17 +18,19 @@ export default function Footer() {
               <li><Link href="/resources" className="hover:text-brand-coral transition-colors">Resources</Link></li>
               <li><Link href="/arts-crafts" className="hover:text-brand-coral transition-colors">Arts &amp; Crafts</Link></li>
               <li><Link href="/orange-county-farmers-market" className="hover:text-brand-coral transition-colors">OC Farmers Markets</Link></li>
-              <li><Link href="/join" className="hover:text-brand-coral transition-colors">OC Insider ✦</Link></li>
               <li><Link href="/about" className="hover:text-brand-coral transition-colors">Our Story</Link></li>
             </ul>
           </div>
           <div>
             <p className="font-semibold text-sm uppercase tracking-wider text-gray-400 mb-3">Account</p>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/signup" className="hover:text-brand-coral transition-colors">Join Free</Link></li>
               <li><Link href="/login" className="hover:text-brand-coral transition-colors">Log In</Link></li>
               <li><Link href="/dashboard" className="hover:text-brand-coral transition-colors">Dashboard</Link></li>
               <li><Link href="/account" className="hover:text-brand-coral transition-colors">Account Settings</Link></li>
+            </ul>
+            <p className="font-semibold text-sm uppercase tracking-wider text-gray-400 mb-3 mt-6">Membership</p>
+            <ul className="space-y-2 text-sm">
+              <li><Link href="/join" className="hover:text-brand-gold transition-colors text-brand-gold/80">OC Insider ✦</Link></li>
             </ul>
           </div>
         </div>
