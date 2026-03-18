@@ -42,6 +42,26 @@ export const getUser = cache(async (): Promise<User | null> => {
     .eq('id', authUser.id)
     .single()
 
+  // Auth session is valid but no DB row yet (e.g. email just confirmed,
+  // trigger hasn't fired). Return a minimal free-tier user so the dashboard
+  // renders instead of looping into /login.
+  if (!data) {
+    return {
+      id:                     authUser.id,
+      email:                  authUser.email ?? '',
+      first_name:             authUser.user_metadata?.first_name ?? null,
+      role:                   'member',
+      tier:                   'free',
+      stripe_customer_id:     null,
+      stripe_subscription_id: null,
+      subscription_status:    null,
+      subscription_ends_at:   null,
+      beehiiv_subscriber_id:  null,
+      created_at:             authUser.created_at,
+      last_login_at:          null,
+    } as User
+  }
+
   return data
 })
 

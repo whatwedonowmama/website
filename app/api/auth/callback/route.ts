@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse, type NextRequest } from 'next/server'
+import { createServiceClient } from '@/lib/supabase/server'
 
 // Handles Supabase Auth callbacks (magic links, email confirmation)
 export async function GET(request: NextRequest) {
@@ -29,9 +30,32 @@ export async function GET(request: NextRequest) {
         },
       }
     )
+
     const { error } = await supabase.auth.exchangeCodeForSession(code)
+
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`)
+      // Ensure a row exists in public.users — the DB trigger may not have fired
+      // (e.g. when email confirmation is enabled, the trigger fires on auth.users
+      //  insert but the anon client can't always read it back immediately).
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser()
+        if (authUser) {
+          const service = createServiceClient()
+          // INSERT … ON CONFLICT DO NOTHING — safe to call every time
+          await service.from('users').insert({
+            id:         authUser.id,
+            email:      authUser.email ?? '',
+            first_name: authUser.user_metadata?.first_name ?? null,
+            role:       'member',
+            tier:       'free',
+          }).select()
+          // If the row already exists, Supabase returns a 409 which we ignore below
+        }
+      } catch {
+        // Non-fatal — getUser() fallback handles missing rows gracefully
+      }
+
+      return NextResponse.redirect(`${origin}${next}?welcome=1`)
     }
   }
 
