@@ -5,8 +5,7 @@ import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Community | OC Insider Dashboard' }
 
-// Update this with your real Discord invite URL, or set via env var
-const DISCORD_INVITE = process.env.NEXT_PUBLIC_DISCORD_INVITE_URL ?? 'https://discord.gg/placeholder'
+const DISCORD_INVITE = process.env.NEXT_PUBLIC_DISCORD_INVITE_URL ?? 'https://discord.gg/cdH7ACXa'
 
 const CHANNELS = [
   { name: '👋  introductions', desc: 'Come say hi and tell us about your little ones.' },
